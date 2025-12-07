@@ -13,6 +13,9 @@ export default function AlertsScreen() {
     loadAlerts();
   }, [filter]);
 
+
+
+  
   const loadAlerts = async () => {
     setIsLoading(true);
     try {
