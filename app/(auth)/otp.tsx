@@ -1,6 +1,15 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import {
+  ActivityIndicator,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
 import { verifyOtp } from '../../services/api';
@@ -11,15 +20,28 @@ export default function OtpScreen() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(30);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(0);
   const inputRefs = useRef<TextInput[]>([]);
   const { login } = useAuth();
 
-  useEffect(() => {
-    if (!phoneNumber) {
-      router.replace('./(auth)/sign-in');
-    }
-  }, [phoneNumber]);
+  // Auto-focus on screen focus
+  useFocusEffect(
+    useCallback(() => {
+      if (!phoneNumber) {
+        router.replace('./(auth)/sign-in');
+        return;
+      }
 
+      const timeout = setTimeout(() => {
+        inputRefs.current[0]?.focus();
+      }, 300);
+
+      return () => clearTimeout(timeout);
+    }, [phoneNumber])
+  );
+
+  // Timer countdown
   useEffect(() => {
     const interval = setInterval(() => {
       setTimer((prev) => (prev > 0 ? prev - 1 : 0));
@@ -28,20 +50,34 @@ export default function OtpScreen() {
   }, []);
 
   const handleOtpChange = (value: string, index: number) => {
-    if (value.length > 1) return;
-    
     const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
 
-    if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus();
+    if (value === '') {
+      newOtp[index] = '';
+      setOtp(newOtp);
+      if (index > 0) inputRefs.current[index - 1]?.focus();
+      return;
     }
+
+    newOtp[index] = value[0];
+    setOtp(newOtp);
+    if (index < 5) inputRefs.current[index + 1]?.focus();
   };
 
   const handleKeyPress = (key: string, index: number) => {
-    if (key === 'Backspace' && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
+    if (key === 'Backspace') {
+      const newOtp = [...otp];
+      if (otp[index]) {
+        newOtp[index] = '';
+        setOtp(newOtp);
+        return;
+      }
+      if (index > 0) {
+        inputRefs.current[index - 1]?.focus();
+        const prevOtp = [...otp];
+        prevOtp[index - 1] = '';
+        setOtp(prevOtp);
+      }
     }
   };
 
@@ -53,26 +89,32 @@ export default function OtpScreen() {
   const handleNext = async () => {
     const otpString = otp.join('');
     if (otpString.length !== 6) {
-      alert('Please enter a valid 6-digit OTP');
+      setError('Please enter a 6-digit OTP.');
       return;
     }
 
     setIsLoading(true);
+    setError('');
+
     try {
       const response = await verifyOtp({ phoneNumber: phoneNumber!, otp: otpString });
-      
+
       if (response.success && response.data) {
         await login(response.data.token, response.data.user);
-        
+
         const termsAccepted = await isTermsAccepted();
         if (termsAccepted) {
           router.replace('/(tabs)');
         } else {
           router.replace('/(auth)/terms');
         }
+      } else {
+        setError('Oops! The code you entered is incorrect. Please try again.');
+        setOtp(['', '', '', '', '', '']);
+        inputRefs.current[0]?.focus();
       }
-    } catch (error) {
-      alert('Invalid OTP. Please try again.');
+    } catch {
+      setError('Something went wrong. Please try again later.');
     } finally {
       setIsLoading(false);
     }
@@ -80,63 +122,110 @@ export default function OtpScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <View className="flex-1 px-6 py-12">
-        <View className="flex-1">
-          <Text className="text-2xl font-semibold text-center text-foreground mb-2">
-            Enter code sent to your phone
-          </Text>
-          <Text className="text-sm text-muted-foreground text-center mb-8">
-            We sent it to +91 {phoneNumber}
-          </Text>
-          
-          <View className="flex-row justify-between mb-6">
-            {otp.map((digit, index) => (
-              <TextInput
-                key={index}
-                ref={(ref) => (inputRefs.current[index] = ref!)}
-                value={digit}
-                onChangeText={(value) => handleOtpChange(value, index)}
-                onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
-                keyboardType="number-pad"
-                maxLength={1}
-                className="w-12 h-14 bg-secondary rounded-xl text-center text-xl font-semibold text-foreground"
-              />
-            ))}
-          </View>
-          
-          <View className="flex-row justify-center items-center">
-            {timer > 0 ? (
-              <Text className="text-sm text-muted-foreground">
-                Resend OTP in {timer}s
-              </Text>
-            ) : (
-              <TouchableOpacity onPress={handleResendOtp}>
-                <Text className="text-sm text-primary font-medium">
-                  Resend OTP
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-        
-        <TouchableOpacity
-          onPress={handleNext}
-          disabled={otp.join('').length !== 6 || isLoading}
-          className={`w-full py-4 rounded-2xl items-center ${
-            otp.join('').length !== 6 || isLoading 
-              ? 'bg-primary/50' 
-              : 'bg-primary'
-          }`}
+
+      <KeyboardAvoidingView
+        behavior="padding"            // ⭐ FIX HERE
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 20}   // ⭐ FIX HERE
+      >
+
+        {/* Scrollable content */}
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingHorizontal: 24,
+            paddingTop: 24,
+            paddingBottom: 120,
+          }}
+          keyboardShouldPersistTaps="handled"
         >
-          {isLoading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text className="text-primary-foreground font-semibold text-base">
-              Next
+          <View className="flex-1">
+
+            {/* Header */}
+            <Text className="text-2xl font-semibold text-center text-foreground mb-2">
+              Enter code sent to your phone
             </Text>
-          )}
-        </TouchableOpacity>
-      </View>
+            <Text className="text-sm text-muted-foreground text-center mb-4">
+              We sent it to +91 {phoneNumber}
+            </Text>
+
+            {/* Error */}
+            {error ? (
+              <Text className="text-red-500 text-center mb-4">{error}</Text>
+            ) : null}
+
+            {/* OTP Inputs */}
+            <View className="flex-row justify-between mb-6">
+              {otp.map((digit, index) => (
+                <TextInput
+                  key={index}
+                  ref={(ref) => (inputRefs.current[index] = ref!)}
+                  autoFocus={index === 0}
+                  value={digit}
+                  onChangeText={(value) => handleOtpChange(value, index)}
+                  onKeyPress={({ nativeEvent }) =>
+                    handleKeyPress(nativeEvent.key, index)
+                  }
+                  keyboardType="number-pad"
+                  maxLength={1}
+                  onFocus={() => setFocusedIndex(index)}
+                  onBlur={() => setFocusedIndex(null)}
+                  style={{
+                    width: 48,
+                    height: 56,
+                    borderRadius: 12,
+                    textAlign: 'center',
+                    fontSize: 20,
+                    fontWeight: '600',
+                    backgroundColor: '#1F1F1F',
+                    color: '#FFFFFF',
+                    borderWidth: focusedIndex === index ? 2 : 1,
+                    borderColor: focusedIndex === index ? '#FFFFFF' : '#3F3F46',
+                  }}
+                />
+              ))}
+            </View>
+
+            {/* Resend OTP */}
+            <View className="flex-row justify-center items-center mb-6">
+              {timer > 0 ? (
+                <Text className="text-sm text-muted-foreground">
+                  Resend OTP in {timer}s
+                </Text>
+              ) : (
+                <TouchableOpacity onPress={handleResendOtp}>
+                  <Text className="text-sm text-primary font-medium">Resend OTP</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        </ScrollView>
+
+        {/* Fixed Next Button */}
+        <View
+          style={{
+            padding: 16,
+            backgroundColor: 'transparent',
+          }}
+        >
+          <TouchableOpacity
+            onPress={handleNext}
+            disabled={otp.join('').length !== 6 || isLoading}
+            className={`w-full py-4 rounded-2xl items-center ${
+              otp.join('').length !== 6 || isLoading ? 'bg-primary/50' : 'bg-primary'
+            }`}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text className="text-primary-foreground font-semibold text-base">
+                Next
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
