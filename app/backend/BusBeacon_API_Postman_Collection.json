@@ -1,0 +1,832 @@
+{
+  "info": {
+    "name": "BusBeacon GPS Smart Bus API",
+    "description": "Complete API collection for GPS Smart Bus System\n\n## Getting Started\n\n### 1. Environment Setup\n- Set `base_url` variable to your server URL (e.g., `http://localhost/busbeacon/api`)\n- After login, copy the `token` from response and set it in environment variables\n\n### 2. Authentication Flow\n1. Call `Send OTP` with a phone number from `jos_users.mobile`\n2. Call `Verify OTP` with phone number and OTP `000000`\n3. Copy `token` from response to use in authenticated requests\n\n### 3. Database Tables Reference\n- `jos_users` - Users (id, name, mobile, userrole)\n- `base_bus_assets` - Buses (id, assetname, capacity)\n- `base_bus_routes` - Routes (id, route, bus_asset_id)\n- `base_bus_stages` - Stops (id, stage, routeid, stagenumber)\n- `base_bus_user_routes` - Student-Stop mapping (userid, stageid)\n- `base_bus_trip_header` - Trips (id, starttime)\n- `base_bus_trip_attendance_details` - Attendance records\n- `base_schoolname` - Schools (schoolid, schoolname)",
+    "_postman_id": "busbeacon-api-v1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://your-server.com/busbeacon/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "Login and logout endpoints. Use OTP 000000 for development.",
+      "item": [
+        {
+          "name": "Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"9876543210\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/send-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "send-otp"]
+            },
+            "description": "Send OTP to phone number.\n\n**Where to get values:**\n- `phoneNumber`: Query from `jos_users.mobile` column\n\n**Example Query:**\n```sql\nSELECT id, name, mobile, userrole \nFROM jos_users \nWHERE block = 0 AND mobile IS NOT NULL\nLIMIT 10;\n```"
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"9876543210\",\n  \"otp\": \"000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify-otp"]
+            },
+            "description": "Verify OTP and get auth token.\n\n**Where to get values:**\n- `phoneNumber`: Query from `jos_users.mobile`\n- `otp`: Use `000000` for development\n\n**Role Mapping (userrole column):**\n- 1 = super_admin\n- 2 = transport_manager\n- 3 = office_admin\n- 4 = attender\n\n**Example Query for Attender:**\n```sql\nSELECT u.id, u.name, u.mobile, u.userrole,\n       m.id as mapping_id, a.assetname as bus\nFROM jos_users u\nJOIN base_bus_asset_route_attendant_map m ON u.id = m.attendantid\nJOIN base_bus_assets a ON m.assetid = a.id\nWHERE u.userrole LIKE '%4%'\nLIMIT 5;\n```\n\n**After successful response:**\n1. Copy `data.token` value\n2. Set it as `token` variable in Postman environment"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Logout current user (JWT is stateless, client should discard token)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "description": "Dashboard statistics and overview data",
+      "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/dashboard/stats",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "stats"]
+            },
+            "description": "Get dashboard statistics.\n\n**Optional Query Parameters:**\n- `branchId`: Filter by school/branch\n\n**Where to get branchId:**\n```sql\nSELECT schoolid, schoolname FROM base_schoolname;\n```"
+          }
+        },
+        {
+          "name": "Get Dashboard Stats (with branchId)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/dashboard/stats?branchId=1",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "stats"],
+              "query": [
+                {
+                  "key": "branchId",
+                  "value": "1",
+                  "description": "School ID from base_schoolname.schoolid"
+                }
+              ]
+            },
+            "description": "Get dashboard stats filtered by branch.\n\n**branchId values from:**\n```sql\nSELECT schoolid as branchId, schoolname \nFROM base_schoolname;\n```"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Trips",
+      "description": "Trip management - start, end, and track trips",
+      "item": [
+        {
+          "name": "Get Today's Trips",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/today",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "today"]
+            },
+            "description": "Get today's trips for the authenticated user.\n\n**Optional Query Parameters:**\n- `busId`: Filter by specific bus\n\n**Response includes:**\n- Morning pickup trip\n- Afternoon dropoff trip"
+          }
+        },
+        {
+          "name": "Get Today's Trips (by Bus)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/today?busId=1",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "today"],
+              "query": [
+                {
+                  "key": "busId",
+                  "value": "1",
+                  "description": "Bus ID from base_bus_assets.id"
+                }
+              ]
+            },
+            "description": "Get today's trips for a specific bus.\n\n**busId values from:**\n```sql\nSELECT id as busId, assetname as busNumber, capacity \nFROM base_bus_assets \nWHERE status = 1;\n```"
+          }
+        },
+        {
+          "name": "Start Trip",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/1/start",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "1", "start"]
+            },
+            "description": "Start a trip by ID.\n\n**tripId values from:**\n```sql\nSELECT h.id as tripId, h.starttime, \n       a.assetname as bus, r.route\nFROM base_bus_trip_header h\nJOIN base_bus_asset_route_attendant_map m ON h.assetrouteattendantid = m.id\nJOIN base_bus_assets a ON m.assetid = a.id\nJOIN base_bus_routes r ON m.routeid = r.id\nORDER BY h.id DESC LIMIT 10;\n```\n\nOr use trip ID returned from \"Get Today's Trips\""
+          }
+        },
+        {
+          "name": "End Trip",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/1/end",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "1", "end"]
+            },
+            "description": "End an active trip.\n\n**tripId**: Use same trip ID from \"Start Trip\""
+          }
+        },
+        {
+          "name": "Get Trip Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/1",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "1"]
+            },
+            "description": "Get details of a specific trip.\n\n**tripId values from:**\n```sql\nSELECT id FROM base_bus_trip_header ORDER BY id DESC LIMIT 10;\n```"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Students",
+      "description": "Student data and search",
+      "item": [
+        {
+          "name": "Get All Students",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/students",
+              "host": ["{{base_url}}"],
+              "path": ["students"]
+            },
+            "description": "Get all students with bus routes.\n\n**Data comes from joining:**\n- `jos_users` (student info)\n- `base_bus_user_routes` (route assignment)\n- `base_bus_stages` (stop details)\n- `base_sections` (class/section)"
+          }
+        },
+        {
+          "name": "Get Students by Bus",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/students?busId=1",
+              "host": ["{{base_url}}"],
+              "path": ["students"],
+              "query": [
+                {
+                  "key": "busId",
+                  "value": "1",
+                  "description": "Bus ID from base_bus_assets.id"
+                }
+              ]
+            },
+            "description": "Get students assigned to a specific bus.\n\n**busId values from:**\n```sql\nSELECT a.id as busId, a.assetname, r.route,\n       COUNT(DISTINCT ur.userid) as students\nFROM base_bus_assets a\nJOIN base_bus_routes r ON a.id = r.bus_asset_id\nJOIN base_bus_stages st ON r.id = st.routeid\nJOIN base_bus_user_routes ur ON st.id = ur.stageid\nWHERE CURDATE() BETWEEN DATE(ur.fromtime) AND DATE(ur.totime)\nGROUP BY a.id;\n```"
+          }
+        },
+        {
+          "name": "Get Students by Stop",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/students?stopId=1",
+              "host": ["{{base_url}}"],
+              "path": ["students"],
+              "query": [
+                {
+                  "key": "stopId",
+                  "value": "1",
+                  "description": "Stop ID from base_bus_stages.id"
+                }
+              ]
+            },
+            "description": "Get students at a specific stop.\n\n**stopId values from:**\n```sql\nSELECT st.id as stopId, st.stage as stopName, \n       r.route, COUNT(ur.userid) as students\nFROM base_bus_stages st\nJOIN base_bus_routes r ON st.routeid = r.id\nLEFT JOIN base_bus_user_routes ur ON st.id = ur.stageid\n  AND CURDATE() BETWEEN DATE(ur.fromtime) AND DATE(ur.totime)\nGROUP BY st.id\nHAVING students > 0;\n```"
+          }
+        },
+        {
+          "name": "Search Students",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/students/search?query=Arjun",
+              "host": ["{{base_url}}"],
+              "path": ["students", "search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "Arjun",
+                  "description": "Search by name or roll number"
+                }
+              ]
+            },
+            "description": "Search students by name or roll number.\n\n**Sample search terms from:**\n```sql\nSELECT name, rollnumber \nFROM jos_users \nWHERE userrole IN ('1', '2', '21')\nLIMIT 20;\n```"
+          }
+        },
+        {
+          "name": "Get Students List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/students/list",
+              "host": ["{{base_url}}"],
+              "path": ["students", "list"]
+            },
+            "description": "Alias for Get All Students"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attendance",
+      "description": "Mark and retrieve attendance records",
+      "item": [
+        {
+          "name": "Mark Attendance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tripId\": \"1\",\n  \"studentId\": \"123\",\n  \"status\": \"present\",\n  \"note\": \"On time\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/attendance/mark",
+              "host": ["{{base_url}}"],
+              "path": ["attendance", "mark"]
+            },
+            "description": "Mark attendance for a student.\n\n**Request Body:**\n- `tripId`: From \"Get Today's Trips\" or `base_bus_trip_header.id`\n- `studentId`: From `jos_users.id`\n- `status`: One of: `present`, `absent`, `half_day`, `reassigned`, `pending`\n- `note`: Optional comment\n\n**Where to get studentId:**\n```sql\nSELECT u.id as studentId, u.name, st.stage as stopName\nFROM jos_users u\nJOIN base_bus_user_routes ur ON u.id = ur.userid\nJOIN base_bus_stages st ON ur.stageid = st.id\nWHERE CURDATE() BETWEEN DATE(ur.fromtime) AND DATE(ur.totime)\nLIMIT 20;\n```\n\n**Data stored in:** `base_bus_trip_attendance_details`"
+          }
+        },
+        {
+          "name": "Get Trip Attendance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/attendance/trip/1",
+              "host": ["{{base_url}}"],
+              "path": ["attendance", "trip", "1"]
+            },
+            "description": "Get all attendance records for a trip.\n\n**tripId values from:**\n```sql\nSELECT h.id as tripId, DATE(h.starttime) as date,\n       COUNT(d.id) as attendance_count\nFROM base_bus_trip_header h\nLEFT JOIN base_bus_trip_attendance_details d ON h.id = d.headerid\nGROUP BY h.id\nORDER BY h.id DESC LIMIT 10;\n```"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Routes",
+      "description": "Bus routes and stops management",
+      "item": [
+        {
+          "name": "Get All Routes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/routes",
+              "host": ["{{base_url}}"],
+              "path": ["routes"]
+            },
+            "description": "Get all active routes with stops.\n\n**Data from:** `base_bus_routes` joined with `base_bus_stages`"
+          }
+        },
+        {
+          "name": "Get Routes by Branch",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/routes?branchId=1",
+              "host": ["{{base_url}}"],
+              "path": ["routes"],
+              "query": [
+                {
+                  "key": "branchId",
+                  "value": "1",
+                  "description": "School ID from base_schoolname.schoolid"
+                }
+              ]
+            },
+            "description": "Get routes for a specific branch.\n\n**branchId values from:**\n```sql\nSELECT s.schoolid as branchId, s.schoolname,\n       COUNT(r.id) as routes\nFROM base_schoolname s\nLEFT JOIN base_bus_routes r ON s.schoolid = r.schoolid\nGROUP BY s.schoolid;\n```"
+          }
+        },
+        {
+          "name": "Get Route Stops",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/routes/1/stops",
+              "host": ["{{base_url}}"],
+              "path": ["routes", "1", "stops"]
+            },
+            "description": "Get all stops for a specific route.\n\n**routeId values from:**\n```sql\nSELECT r.id as routeId, r.route as routeName,\n       a.assetname as bus,\n       COUNT(st.id) as stops\nFROM base_bus_routes r\nJOIN base_bus_assets a ON r.bus_asset_id = a.id\nLEFT JOIN base_bus_stages st ON r.id = st.routeid\nWHERE CURDATE() BETWEEN r.start_date AND r.end_date\nGROUP BY r.id;\n```"
+          }
+        },
+        {
+          "name": "Get Route Students",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/routes/1/students",
+              "host": ["{{base_url}}"],
+              "path": ["routes", "1", "students"]
+            },
+            "description": "Get all students grouped by stops for a route.\n\n**routeId**: Same as \"Get Route Stops\"\n\n**Returns:** Array of stops, each with their assigned students"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Buses",
+      "description": "Bus management and tracking",
+      "item": [
+        {
+          "name": "Get All Buses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/buses",
+              "host": ["{{base_url}}"],
+              "path": ["buses"]
+            },
+            "description": "Get all buses with route info.\n\n**Data from:** `base_bus_assets` joined with `base_bus_routes`"
+          }
+        },
+        {
+          "name": "Get Buses by Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/buses?status=on_trip",
+              "host": ["{{base_url}}"],
+              "path": ["buses"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "on_trip",
+                  "description": "Filter: all, on_trip, idle, maintenance"
+                }
+              ]
+            },
+            "description": "Get buses filtered by status.\n\n**Status values:**\n- `all` - All buses\n- `on_trip` - Currently on active trip\n- `idle` - Active but not on trip\n- `maintenance` - Under maintenance"
+          }
+        },
+        {
+          "name": "Get Active Buses (Live)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/buses/active",
+              "host": ["{{base_url}}"],
+              "path": ["buses", "active"]
+            },
+            "description": "Get buses currently on trips with GPS location.\n\n**Data from:**\n- `base_bus_assets`\n- `base_bus_trip_header`\n- `base_bus_location_data` (latest GPS coordinates)"
+          }
+        },
+        {
+          "name": "Update Bus Location",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tripId\": \"1\",\n  \"latitude\": 17.4156,\n  \"longitude\": 78.4347,\n  \"speed\": 35.5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/buses/location",
+              "host": ["{{base_url}}"],
+              "path": ["buses", "location"]
+            },
+            "description": "Update bus GPS location during trip.\n\n**Request Body:**\n- `tripId`: Active trip ID from `base_bus_trip_header.id`\n- `latitude`: GPS latitude\n- `longitude`: GPS longitude\n- `speed`: Current speed in km/h\n\n**Data stored in:** `base_bus_location_data`"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Approvals",
+      "description": "Request approval management (Route changes, temporary stops)\n\n⚠️ Note: `base_bus_approvals` table doesn't exist in current schema - returns empty/dummy data",
+      "item": [
+        {
+          "name": "Get All Approvals",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/approvals",
+              "host": ["{{base_url}}"],
+              "path": ["approvals"]
+            },
+            "description": "Get all approval requests.\n\n**Note:** Returns empty array as `base_bus_approvals` table is not in the schema.\n\nTo implement, create table:\n```sql\nCREATE TABLE base_bus_approvals (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  type ENUM('route_change', 'half_day', 'temp_stop'),\n  student_id INT,\n  requested_by INT,\n  requested_at DATETIME,\n  status ENUM('pending', 'approved', 'rejected'),\n  processed_by INT,\n  processed_at DATETIME,\n  note TEXT,\n  details JSON\n);\n```"
+          }
+        },
+        {
+          "name": "Approve Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Approved for one week\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/approvals/1/approve",
+              "host": ["{{base_url}}"],
+              "path": ["approvals", "1", "approve"]
+            },
+            "description": "Approve a pending request.\n\n**approvalId**: From \"Get All Approvals\" response"
+          }
+        },
+        {
+          "name": "Reject Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Bus already at full capacity\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/approvals/1/reject",
+              "host": ["{{base_url}}"],
+              "path": ["approvals", "1", "reject"]
+            },
+            "description": "Reject a pending request.\n\n**Request Body:**\n- `reason`: Reason for rejection (required)"
+          }
+        },
+        {
+          "name": "Process Approval",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\",\n  \"note\": \"Approved with conditions\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/approvals/1/process",
+              "host": ["{{base_url}}"],
+              "path": ["approvals", "1", "process"]
+            },
+            "description": "Process approval with custom status.\n\n**Request Body:**\n- `status`: `approved` or `rejected`\n- `note`: Optional comment"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Half-Day Leaves",
+      "description": "Half-day leave management\n\n⚠️ Note: `base_bus_halfday_leaves` table doesn't exist - returns dummy data",
+      "item": [
+        {
+          "name": "Create Half-Day Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"123\",\n  \"date\": \"2024-12-07\",\n  \"pickupTime\": \"12:30 PM\",\n  \"type\": \"parent_pickup\",\n  \"pickupBy\": \"Mother - Mrs. Sharma\",\n  \"reason\": \"Doctor appointment\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/halfday/create",
+              "host": ["{{base_url}}"],
+              "path": ["halfday", "create"]
+            },
+            "description": "Create a half-day leave request.\n\n**Request Body:**\n- `studentId`: From `jos_users.id`\n- `date`: Leave date (YYYY-MM-DD)\n- `pickupTime`: Time for pickup\n- `type`: `parent_pickup`, `early_leave`, or `medical`\n- `pickupBy`: Who will pick up\n- `reason`: Reason for leave\n\n**studentId values from:**\n```sql\nSELECT u.id as studentId, u.name, u.mobile\nFROM jos_users u\nJOIN base_bus_user_routes ur ON u.id = ur.userid\nWHERE CURDATE() BETWEEN DATE(ur.fromtime) AND DATE(ur.totime)\nLIMIT 20;\n```"
+          }
+        },
+        {
+          "name": "Get Today's Half-Day Leaves",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/halfday/today",
+              "host": ["{{base_url}}"],
+              "path": ["halfday", "today"]
+            },
+            "description": "Get all half-day leaves for today.\n\n**Note:** Returns empty as table doesn't exist."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alerts",
+      "description": "System alerts and notifications",
+      "item": [
+        {
+          "name": "Get All Alerts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/alerts",
+              "host": ["{{base_url}}"],
+              "path": ["alerts"]
+            },
+            "description": "Get all system alerts.\n\n**Data from:** `base_bus_stagedelay_alerts`\n\n**Query to see raw data:**\n```sql\nSELECT a.*, st.stage, r.route\nFROM base_bus_stagedelay_alerts a\nJOIN base_bus_stages st ON a.stageid = st.id\nJOIN base_bus_routes r ON st.routeid = r.id\nORDER BY a.senton DESC;\n```"
+          }
+        },
+        {
+          "name": "Get Unacknowledged Alerts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/alerts?isAcknowledged=false",
+              "host": ["{{base_url}}"],
+              "path": ["alerts"],
+              "query": [
+                {
+                  "key": "isAcknowledged",
+                  "value": "false",
+                  "description": "Filter by acknowledgement status"
+                }
+              ]
+            },
+            "description": "Get only unacknowledged alerts."
+          }
+        },
+        {
+          "name": "Acknowledge Alert",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/alerts/1/acknowledge",
+              "host": ["{{base_url}}"],
+              "path": ["alerts", "1", "acknowledge"]
+            },
+            "description": "Acknowledge an alert.\n\n**alertId values from:**\n```sql\nSELECT id as alertId, alerttype, senton\nFROM base_bus_stagedelay_alerts\nORDER BY id DESC LIMIT 10;\n```"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "description": "User notifications",
+      "item": [
+        {
+          "name": "Get All Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/notifications",
+              "host": ["{{base_url}}"],
+              "path": ["notifications"]
+            },
+            "description": "Get all notifications for current user.\n\n**Data from:** `base_useralerts` filtered by authenticated user ID"
+          }
+        },
+        {
+          "name": "Get Unread Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/notifications?unreadOnly=true",
+              "host": ["{{base_url}}"],
+              "path": ["notifications"],
+              "query": [
+                {
+                  "key": "unreadOnly",
+                  "value": "true",
+                  "description": "Only return unread notifications"
+                }
+              ]
+            },
+            "description": "Get only unread notifications.\n\n**Query to see data:**\n```sql\nSELECT id, type, message, date, status\nFROM base_useralerts\nWHERE status = 0 -- unread\nAND userid = [YOUR_USER_ID]\nORDER BY date DESC;\n```"
+          }
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/notifications/1/read",
+              "host": ["{{base_url}}"],
+              "path": ["notifications", "1", "read"]
+            },
+            "description": "Mark a single notification as read.\n\n**notificationId values from:**\n```sql\nSELECT id, message, status FROM base_useralerts\nWHERE userid = [YOUR_USER_ID]\nORDER BY date DESC LIMIT 20;\n```"
+          }
+        },
+        {
+          "name": "Mark All Notifications as Read",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/notifications/read-all",
+              "host": ["{{base_url}}"],
+              "path": ["notifications", "read-all"]
+            },
+            "description": "Mark all notifications as read for current user."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Schools",
+      "description": "School and branch data",
+      "item": [
+        {
+          "name": "Get All Schools",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/schools",
+              "host": ["{{base_url}}"],
+              "path": ["schools"]
+            },
+            "description": "Get all schools with branches.\n\n**Data from:** `base_schoolname`\n\n**Query to see data:**\n```sql\nSELECT schoolid, schoolname, code, \n       address1, area, city, state\nFROM base_schoolname\nORDER BY schoolname;\n```"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Issues",
+      "description": "Issue reporting system",
+      "item": [
+        {
+          "name": "Get Issue Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/issues/categories",
+              "host": ["{{base_url}}"],
+              "path": ["issues", "categories"]
+            },
+            "description": "Get available issue categories.\n\n**Returns fixed categories:**\n- Vehicle Breakdown\n- Student Issue\n- Route Problem\n- Accident\n- Schedule Delay\n- Other"
+          }
+        },
+        {
+          "name": "Report Issue",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryId\": \"1\",\n  \"description\": \"Bus tire punctured near Green Park. Need assistance.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/issues/report",
+              "host": ["{{base_url}}"],
+              "path": ["issues", "report"]
+            },
+            "description": "Report a new issue.\n\n**Request Body:**\n- `categoryId`: From \"Get Issue Categories\" (1-6)\n- `description`: Detailed issue description\n\n**Returns:** Ticket ID for tracking"
+          }
+        }
+      ]
+    }
+  ]
+}

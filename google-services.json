@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "631193014016",
+    "project_id": "busbeacon-5cd70",
+    "storage_bucket": "busbeacon-5cd70.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:631193014016:android:30ab914024d6c8d360ede5",
+        "android_client_info": {
+          "package_name": "com.winnou.busbeacon"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCRkj58i_b4S-62Yeo72Fm1rD6eEBHMkRc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
