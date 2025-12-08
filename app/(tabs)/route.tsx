@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
-import { AttendanceStatus, getStudentsByRoute, Stop, Student } from '../../services/api';
+import { AttendanceStatus, getStudentsByRoute, markAttendance, Stop, Student } from '../../services/api-rest';
 
 type StopWithStudents = Stop & { students: Student[] };
 
@@ -20,7 +20,8 @@ export default function RouteScreen() {
   const [studentStatuses, setStudentStatuses] = useState<Record<string, AttendanceStatus>>({});
 
   // Get route ID from user's assigned route
-  const routeId = user?.assignedRoute?.id || 'route_12';
+  const routeId = user?.assignedRoute?.id || '1';
+  //console.log('route.tsx : routeId : '+routeId);
 
   useEffect(() => {
     loadRouteData();
@@ -67,7 +68,8 @@ export default function RouteScreen() {
   const handleMarkAttendance = async (studentId: string, status: AttendanceStatus) => {
     setStudentStatuses(prev => ({ ...prev, [studentId]: status }));
     // API call (commented for now, using local state)
-    // await markAttendance({ tripId: 'current_trip', studentId, status });
+    console.log('handleMarkAttendance -> studentId: '+studentId+' | status :'+status);
+     await markAttendance({ tripId: 'current_trip', studentId, status });
   };
 
   const getStatusIcon = (status: AttendanceStatus, size: number = 24) => {

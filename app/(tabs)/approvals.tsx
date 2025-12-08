@@ -2,7 +2,7 @@ import { Bus, CheckCircle, ChevronDown, ChevronUp, Clock, FileText, MapPin, User
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Approval, ApprovalStatus, getApprovals, HalfDayDetails, processApproval, RouteChangeDetails } from '../../services/api';
+import { Approval, ApprovalStatus, getApprovals, HalfDayDetails, processApproval, RouteChangeDetails } from '../../services/api-rest';
 
 type FilterType = 'all' | 'pending' | 'approved' | 'rejected';
 

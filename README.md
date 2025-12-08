@@ -148,4 +148,4 @@ For testing, use OTP: `000000`
 
 ## Replacing with Real APIs
 
-All API calls in `services/api.ts` are commented with `// TODO: Replace with actual API call`. Uncomment and modify the fetch calls with your actual API endpoints.
+All API calls in `services/api-rest.ts` are commented with `// TODO: Replace with actual API call`. Uncomment and modify the fetch calls with your actual API endpoints.
