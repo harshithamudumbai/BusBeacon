@@ -2,7 +2,7 @@ import { AlertCircle, Bus, MapPin, Users, Wrench } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getIssueCategories, IssueCategory, reportIssue } from '../../services/api';
+import { getIssueCategories, IssueCategory, reportIssue } from '../../services/api-rest';
 
 export default function ReportScreen() {
   const [categories, setCategories] = useState<IssueCategory[]>([]);

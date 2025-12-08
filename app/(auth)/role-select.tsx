@@ -3,7 +3,7 @@ import { Building2, Shield, Truck, UserCheck } from 'lucide-react-native';
 import React from 'react';
 import { SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
-import { AppRole, ROLE_DESCRIPTIONS, ROLE_LABELS } from '../../services/api';
+import { AppRole, ROLE_DESCRIPTIONS, ROLE_LABELS } from '../../services/api-rest';
 
 const ROLE_ICONS: Record<AppRole, React.ComponentType<any>> = {
   super_admin: Shield,

@@ -2,7 +2,7 @@ import { AlertTriangle, Bus, MapPin, Phone, Users } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Bus as BusType, getBuses } from '../../services/api';
+import { Bus as BusType, getBuses } from '../../services/api-rest';
 
 export default function BusesScreen() {
   const [buses, setBuses] = useState<BusType[]>([]);

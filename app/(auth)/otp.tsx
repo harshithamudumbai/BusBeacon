@@ -1,18 +1,18 @@
-import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
-import { verifyOtp } from '../../services/api';
+import { verifyOtp } from '../../services/api-rest';
 import { isTermsAccepted } from '../../services/storage';
 
 export default function OtpScreen() {

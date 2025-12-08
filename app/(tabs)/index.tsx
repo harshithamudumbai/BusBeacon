@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
-import { DashboardStats, getDashboardStats, getTodayTrips, TodayTrips } from '../../services/api';
+import { DashboardStats, getDashboardStats, getTodayTrips, TodayTrips } from '../../services/api-rest';
 //import { isFirstTime, setFirstTimeComplete } from '../../services/storage';
 import { clearShowWelcome, shouldShowWelcome } from '../../services/storage';
 

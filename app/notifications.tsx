@@ -3,7 +3,7 @@ import { AlertCircle, ArrowLeft, Bell, CheckCircle, Info } from 'lucide-react-na
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getNotifications, Notification } from '../services/api';
+import { getNotifications, Notification } from '../services/api-rest';
 
 export default function NotificationsScreen() {
   const [notifications, setNotifications] = useState<Notification[]>([]);

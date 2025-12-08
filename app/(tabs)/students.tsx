@@ -1,16 +1,16 @@
 import {
-  CheckCircle,
-  Clock,
-  Hourglass,
-  Search,
-  Shuffle,
-  Timer,
-  XCircle
+    CheckCircle,
+    Clock,
+    Hourglass,
+    Search,
+    Shuffle,
+    Timer,
+    XCircle
 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getStudents, Student } from '../../services/api';
+import { getStudents, Student } from '../../services/api-rest';
 
 export default function StudentsScreen() {
   const [students, setStudents] = useState<Student[]>([]);

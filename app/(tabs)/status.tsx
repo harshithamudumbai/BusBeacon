@@ -2,7 +2,7 @@ import { Bus, Clock, Users } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Bus as BusType, getActiveBuses } from '../../services/api';
+import { Bus as BusType, getActiveBuses } from '../../services/api-rest';
 
 export default function StatusScreen() {
   const [buses, setBuses] = useState<BusType[]>([]);

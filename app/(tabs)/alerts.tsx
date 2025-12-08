@@ -2,7 +2,7 @@ import { AlertTriangle, Bus, CheckCircle, Clock, User } from 'lucide-react-nativ
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { acknowledgeAlert, Alert, getAlerts } from '../../services/api';
+import { acknowledgeAlert, Alert, getAlerts } from '../../services/api-rest';
 
 export default function AlertsScreen() {
   const [alerts, setAlerts] = useState<Alert[]>([]);

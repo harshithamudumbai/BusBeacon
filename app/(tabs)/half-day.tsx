@@ -2,7 +2,7 @@ import { CheckCircle, ChevronRight, Clock, Search, User } from 'lucide-react-nat
 import { useState } from 'react';
 import { ActivityIndicator, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { createHalfDayRequest, searchStudents, Student } from '../../services/api';
+import { createHalfDayRequest, searchStudents, Student } from '../../services/api-rest';
 
 export default function HalfDayScreen() {
   const [searchQuery, setSearchQuery] = useState('');

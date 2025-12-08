@@ -1,8 +1,8 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import {ActivityIndicator,Text,TextInput,TouchableOpacity,View,KeyboardAvoidingView,Platform,ScrollView,} from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View, } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { sendOtp } from '../../services/api';
+import { sendOtp } from '../../services/api-rest';
 
 export default function SignInScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');

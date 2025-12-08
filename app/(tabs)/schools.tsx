@@ -2,7 +2,7 @@ import { Building, Bus, ChevronDown, ChevronRight, ChevronUp, MapPin, Users } fr
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getSchools, School } from '../../services/api';
+import { getSchools, School } from '../../services/api-rest';
 
 export default function SchoolsScreen() {
   const [schools, setSchools] = useState<School[]>([]);
