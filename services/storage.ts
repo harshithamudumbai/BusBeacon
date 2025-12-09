@@ -4,7 +4,8 @@
 // ============================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppRole, UserProfile } from './api';
+import { AppRole, UserProfile } from './api-rest';
+//Ensure storage.ts only imports Types (AppRole, UserProfile) from api-rest.ts. Types are stripped out during compilation, so they don't cause runtime cycles. you are 100% safe.
 
 const STORAGE_KEYS = {
   AUTH_TOKEN: 'busbeacon_auth_token',

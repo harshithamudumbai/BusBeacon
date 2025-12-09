@@ -1,15 +1,15 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { AppRole, UserProfile } from '../services/api-rest';
 import {
-    clearAllStorage,
-    getAuthToken,
-    getSelectedRole,
-    getUserData,
-    removeSelectedRole,
-    saveAuthToken,
-    saveSelectedRole,
-    saveUserData,
-    StoredUserData,
+  clearAllStorage,
+  getAuthToken,
+  getSelectedRole,
+  getUserData,
+  removeSelectedRole,
+  saveAuthToken,
+  saveSelectedRole,
+  saveUserData,
+  StoredUserData,
 } from '../services/storage';
 
 interface AuthContextType {

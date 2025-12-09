@@ -1,21 +1,32 @@
 import {
-    CheckCircle,
-    Clock,
-    Hourglass,
-    Search,
-    Shuffle,
-    Timer,
-    XCircle
+  CheckCircle,
+  Clock,
+  Hourglass,
+  Search,
+  Shuffle,
+  Timer,
+  XCircle,
+  Phone
 } from 'lucide-react-native';
+
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  Linking
+} from 'react-native';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getStudents, Student } from '../../services/api-rest';
 
 export default function StudentsScreen() {
   const [students, setStudents] = useState<Student[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  //const [filter, setFilter] = useState<'all' | 'present' | 'absent'>('all');
   const [filter, setFilter] = useState<'all' | 'present' | 'absent' | 'pending'>('all');
 
   const [isLoading, setIsLoading] = useState(true);
@@ -26,7 +37,11 @@ export default function StudentsScreen() {
 
   const loadStudents = async () => {
     try {
-      const response = await getStudents();
+      let busId = '2';
+      let branchId = '0';
+      let stopId = '0';
+      const response = await getStudents({ branchId, busId: '1', stopId });
+
       if (response.success && response.data) {
         setStudents(response.data);
       }
@@ -41,35 +56,29 @@ export default function StudentsScreen() {
     const matchesSearch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter =
       filter === 'all' ||
-      //(filter === 'present' && student.attendanceStatus === 'present') ||
-      //(filter === 'absent' && student.attendanceStatus === 'absent');
       (filter === 'present' && student.attendanceStatus === 'present') ||
       (filter === 'absent' && student.attendanceStatus === 'absent') ||
       (filter === 'pending' && student.attendanceStatus === 'pending');
+
     return matchesSearch && matchesFilter;
   });
 
-const getStatusIcon = (status?: string) => {
-  switch (status) {
-    case 'present':
-      return <CheckCircle size={20} color="#22C55E" />; // green
-
-    case 'absent':
-      return <XCircle size={20} color="#EF4444" />; // red
-
-    case 'pending':
-      return <Clock size={20} color="#F59E0B" />; // yellow
-
-    case 'reassigned':
-      return <Shuffle size={20} color="#3B82F6" />; // blue
-
-    case 'half_day':
-      return <Hourglass size={20} color="#A855F7" />; // purple
-
-    default:
-      return <Timer size={20} color="#71717A" />; // fallback grey
-  }
-};
+  const getStatusIcon = (status?: string) => {
+    switch (status) {
+      case 'present':
+        return <CheckCircle size={20} color="#22C55E" />;
+      case 'absent':
+        return <XCircle size={20} color="#EF4444" />;
+      case 'pending':
+        return <Clock size={20} color="#F59E0B" />;
+      case 'reassigned':
+        return <Shuffle size={20} color="#3B82F6" />;
+      case 'half_day':
+        return <Hourglass size={20} color="#A855F7" />;
+      default:
+        return <Timer size={20} color="#71717A" />;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -104,9 +113,7 @@ const getStatusIcon = (status?: string) => {
 
       {/* Filters */}
       <View className="flex-row px-4 mb-4 gap-2">
-        {/*(['all', 'present', 'absent'] as const).map((f) => ( */
-        (['all', 'present', 'absent', 'pending'] as const).map((f) => (
-  
+        {(['all', 'present', 'absent', 'pending'] as const).map((f) => (
           <TouchableOpacity
             key={f}
             onPress={() => setFilter(f)}
@@ -134,6 +141,7 @@ const getStatusIcon = (status?: string) => {
                 source={{ uri: student.photoUrl || 'https://via.placeholder.com/100' }}
                 className="w-12 h-12 rounded-full bg-secondary"
               />
+
               <View className="flex-1 ml-3">
                 <Text className="text-base font-semibold text-foreground">
                   {student.name}
@@ -142,9 +150,26 @@ const getStatusIcon = (status?: string) => {
                   Class {student.class}-{student.section} • {student.stop?.name || 'No stop'}
                 </Text>
               </View>
-              <View>
+
+              {/* Phone + Status Icons */}
+              <View className="flex-row items-center gap-3">
+                {/* Call Button (Fixed Number) */}
+               <TouchableOpacity
+                    onPress={() => {
+                      const phone = student.parent1Phone?.trim();
+                      if (phone) {
+                        Linking.openURL(`tel:${phone}`);
+                      } else {
+                        alert("No phone number available");
+                       }
+                      }}
+                      >
+                      <Phone size={22} color="#22C55E" />
+               </TouchableOpacity>
+                {/* Status Icon */}
                 {getStatusIcon(student.attendanceStatus ?? 'absent')}
               </View>
+
             </View>
           </View>
         ))}
