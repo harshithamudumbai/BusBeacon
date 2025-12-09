@@ -1,12 +1,23 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View, } from 'react-native';
+import { useState, useEffect } from 'react';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { sendOtp } from '../../services/api-rest';
 
 export default function SignInScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+  if (Platform.OS === 'android') {
+    const backAction = () => {
+      BackHandler.exitApp(); // exits app
+      return true;           // prevents default back behavior
+    };
+    const subscription = BackHandler.addEventListener('hardwareBackPress', backAction);
+    return () => subscription.remove();
+  }
+}, []);
 
   const handleNext = async () => {
     if (phoneNumber.length !== 10) {
