@@ -9,15 +9,20 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     await logout();
-    router.replace('./(auth)/sign-in');
+    router.replace('/(auth)/sign-in'); // Go back to sign-in
   };
 
+  // Menu items
   const menuItems = [
     { icon: User, label: 'Edit Profile', onPress: () => {} },
     { icon: Bell, label: 'Notification Settings', onPress: () => {} },
     { icon: Shield, label: 'Privacy & Security', onPress: () => {} },
-    { icon: HelpCircle, label: 'Help & Support', onPress: () => {} },
-    { icon: Settings, label: 'App Settings', onPress: () => {} },
+    { 
+      icon: HelpCircle, 
+      label: 'Help & Support', 
+      onPress: () => router.push('/help-support') 
+    },
+    { label: 'App Settings', onPress: () => router.push('/settings') },
   ];
 
   return (
@@ -69,7 +74,6 @@ export default function ProfileScreen() {
                 index < menuItems.length - 1 ? 'border-b border-border' : ''
               }`}
             >
-              <item.icon size={20} color="#71717A" />
               <Text className="flex-1 text-foreground ml-3">{item.label}</Text>
               <ChevronRight size={20} color="#71717A" />
             </TouchableOpacity>
