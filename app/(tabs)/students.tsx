@@ -1,11 +1,11 @@
 import {
-    CheckCircle,
-    Clock,
-    Hourglass,
-    Search,
-    Shuffle,
-    Timer,
-    XCircle
+  CheckCircle,
+  Clock,
+  Hourglass,
+  Search,
+  Shuffle,
+  Timer,
+  XCircle
 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -26,7 +26,10 @@ export default function StudentsScreen() {
 
   const loadStudents = async () => {
     try {
-      const response = await getStudents();
+      let busId = '2';
+      let branchId = '0';
+      let stopId = '0';
+      const response = await getStudents({ branchId, busId : '1',  stopId }); // i need busId in this screen to fetch students based on busid from base_bus_asset_route_attendant_map.assestid
       if (response.success && response.data) {
         setStudents(response.data);
       }

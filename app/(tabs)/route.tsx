@@ -69,7 +69,7 @@ export default function RouteScreen() {
     setStudentStatuses(prev => ({ ...prev, [studentId]: status }));
     // API call (commented for now, using local state)
     console.log('handleMarkAttendance -> studentId: '+studentId+' | status :'+status);
-     await markAttendance({ tripId: 'current_trip', studentId, status });
+     await markAttendance({ tripId: '2', studentId, status });
   };
 
   const getStatusIcon = (status: AttendanceStatus, size: number = 24) => {

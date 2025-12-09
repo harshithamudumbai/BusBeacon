@@ -2,7 +2,7 @@
 // GPS SMART BUS SYSTEM - REST API SERVICE
 // This file connects to actual PHP backend
 // ============================================
-
+import { getAuthToken } from '../services/storage';
 // Base URL for API - Replace with your server URL
 const API_BASE_URL = 'https://gps.winnou.in/busbeacon/api';
 
@@ -254,12 +254,9 @@ export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
 // ============================================
 // API HELPER FUNCTIONS
 // ============================================
+//const AUTH_TOKEN_KEY = 'busbeacon_auth_token'; 
 
-let authToken: string | null = null;
-
-export const setAuthToken = (token: string | null) => {
-  authToken = token;
-};
+//let authToken: string | null = null;
 
 const apiRequest = async <T>(
   endpoint: string,
@@ -270,7 +267,12 @@ const apiRequest = async <T>(
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-    
+
+    // 1. GET TOKEN FROM STORAGE
+    // We fetch it fresh for every request.
+    const authToken = await getAuthToken();
+    //console.log(JSON.stringify(authToken, null, 2));
+
     if (authToken) {
       headers['Authorization'] = `Bearer ${authToken}`;
     }
@@ -286,7 +288,7 @@ const apiRequest = async <T>(
 
     // For GET requests with params, append to URL
     let url = `${API_BASE_URL}${endpoint}`;
-    console.log('apiRequest -> url : '+url);
+
     if (body && method === 'GET') {
       const params = new URLSearchParams();
       Object.entries(body).forEach(([key, value]) => {
@@ -299,10 +301,10 @@ const apiRequest = async <T>(
         url += `?${queryString}`;
       }
     }
-
+    console.log('apiRequest -> url : '+url);
     const response = await fetch(url, config);
     const data = await response.json();
-    console.log(data);
+    //console.log(data);
     return data;
   } catch (error) {
     console.error('API Error:', error);
@@ -324,14 +326,14 @@ export const sendOtp = async (params: { phoneNumber: string }): Promise<ApiRespo
 export const verifyOtp = async (params: { phoneNumber: string; otp: string }): Promise<ApiResponse<{ token: string; user: UserProfile }>> => {
   const response = await apiRequest<{ token: string; user: UserProfile }>('/auth/verify-otp', 'POST', params);
   if (response.success && response.data?.token) {
-    setAuthToken(response.data.token);
+   // setAuthToken(response.data.token);
   }
   return response;
 };
 
 export const logout = async (): Promise<ApiResponse<{ message: string }>> => {
   const response = await apiRequest<{ message: string }>('/auth/logout', 'POST');
-  setAuthToken(null);
+ // setAuthToken(null);
   return response;
 };
 
