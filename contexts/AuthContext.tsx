@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const token = await getAuthToken();
       const userData = await getUserData();
       const savedRole = await getSelectedRole();
-      
+      console.log(userData);
       if (token && userData) {
         setIsAuthenticated(true);
         setUser(userData);

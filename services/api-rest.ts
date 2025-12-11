@@ -251,6 +251,28 @@ export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
   attender: 'Mark attendance & manage trips',
 };
 
+
+export interface BusLocationData {
+  tripId: string | null;
+  isLive: boolean;
+  currentStopIndex: number;
+  progress: number; // 0.0 to 1.0
+  currentLocation?: {
+    latitude: number;
+    longitude: number;
+    speed: number;
+  };
+  nearestStop?: {
+    index: number;
+    name: string;
+  };
+}
+
+// Add this function
+export const getBusTracking = async (routeId: string): Promise<ApiResponse<BusLocationData>> => {
+  return apiRequest(`/routes/${routeId}/bus-location`, 'GET');
+};
+
 // ============================================
 // API HELPER FUNCTIONS
 // ============================================
