@@ -2,23 +2,23 @@ import {
   CheckCircle,
   Clock,
   Hourglass,
+  Phone,
   Search,
   Shuffle,
   Timer,
-  XCircle,
-  Phone
+  XCircle
 } from 'lucide-react-native';
 
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
+  Linking,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-  Linking
+  View
 } from 'react-native';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -40,7 +40,7 @@ export default function StudentsScreen() {
       let busId = '2';
       let branchId = '0';
       let stopId = '0';
-      const response = await getStudents({ branchId, busId: '1', stopId });
+      const response = await getStudents({ branchId, busId: '6', stopId });
 
       if (response.success && response.data) {
         setStudents(response.data);

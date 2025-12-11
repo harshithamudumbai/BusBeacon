@@ -1,52 +1,102 @@
+import { useFocusEffect } from 'expo-router';
 import { ArrowRight, CheckCircle, ChevronDown, ChevronUp, Clock, MapPin, RefreshCw, UserMinus, XCircle } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, Alert, Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
-import { AttendanceStatus, getStudentsByRoute, markAttendance, Stop, Student } from '../../services/api-rest';
+import { AttendanceStatus, getStudentsByRoute, getTodayTrips, markAttendance, Stop, Student } from '../../services/api-rest';
 
 type StopWithStudents = Stop & { students: Student[] };
-
-// Status for each stop: completed (bus passed), current (bus is here), pending (bus hasn't arrived)
 type StopStatus = 'completed' | 'current' | 'pending';
 
 export default function RouteScreen() {
   const { user } = useAuth();
   const [stops, setStops] = useState<StopWithStudents[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Initial load only
+  const [refreshing, setRefreshing] = useState(false); // For Pull-to-refresh
   const [expandedStopId, setExpandedStopId] = useState<string | null>(null);
   const [hoveredStopId, setHoveredStopId] = useState<string | null>(null);
-  const [currentStopIndex, setCurrentStopIndex] = useState(2); // Simulating current stop at index 2
+  const [currentStopIndex, setCurrentStopIndex] = useState(4);
   const [studentStatuses, setStudentStatuses] = useState<Record<string, AttendanceStatus>>({});
+  
+  // NEW: State to store the actual active trip ID
+  const [tripId, setTripId] = useState<string | null>(null);
 
-  // Get route ID from user's assigned route
   const routeId = user?.assignedRoute?.id || '1';
-  //console.log('route.tsx : routeId : '+routeId);
 
-  useEffect(() => {
-    loadRouteData();
-  }, [routeId]);
+  // --- DATA LOADING LOGIC ---
 
-  const loadRouteData = async () => {
+  const loadRouteData = async (isSilent = false) => {
+    // Only show loading spinner if it's NOT a silent update (background poll)
+    if (!isSilent) setIsLoading(true);
+
     try {
-      const response = await getStudentsByRoute(routeId);
-      if (response.success && response.data) {
-        setStops(response.data.stops);
-        // Initialize student statuses from their current attendance status
-        const initialStatuses: Record<string, AttendanceStatus> = {};
-        response.data.stops.forEach(stop => {
+      // 1. Fetch Route & Students (API returns status now!)
+      const routeResponse = await getStudentsByRoute(routeId);
+      
+      // 2. Fetch Active Trip ID (to enable marking)
+      const tripResponse = await getTodayTrips();
+      
+      if (tripResponse.success && tripResponse.data?.trips) {
+        const activeTrip = tripResponse.data.trips.find(t => t.status === 'active') || tripResponse.data.trips[0];
+        if (activeTrip) {
+          setTripId(activeTrip.id);
+        }
+      }
+
+      if (routeResponse.success && routeResponse.data) {
+        const fetchedStops = routeResponse.data.stops;
+        const newStatuses: Record<string, AttendanceStatus> = {};
+
+        fetchedStops.forEach(stop => {
           stop.students.forEach(student => {
-            initialStatuses[student.id] = student.attendanceStatus || 'pending';
+            // API now returns the correct status directly
+            newStatuses[student.id] = student.attendanceStatus || 'pending';
           });
         });
-        setStudentStatuses(initialStatuses);
+
+        setStops(fetchedStops);
+        setStudentStatuses(newStatuses);
       }
     } catch (error) {
       console.error('Failed to load route data:', error);
+      if (!isSilent) Alert.alert('Error', 'Failed to load data.');
     } finally {
-      setIsLoading(false);
+      if (!isSilent) setIsLoading(false);
     }
   };
+
+  // --- POLLING & LIFECYCLE ---
+
+  useFocusEffect(
+    useCallback(() => {
+      // 1. Initial Load (Shows Spinner)
+      loadRouteData(false);
+
+      // 2. Start Polling every 5 seconds (Silent - No Spinner)
+      const intervalId = setInterval(() => {
+        loadRouteData(true);
+      }, 15000);
+
+      // Cleanup when screen loses focus
+      return () => clearInterval(intervalId);
+    }, [routeId])
+  );
+
+  // --- PULL TO REFRESH ---
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    // Force at least 0.5s delay for visual feedback
+    const minDelay = new Promise(resolve => setTimeout(resolve, 500));
+    const loadData = loadRouteData(true); // Pass true to avoid double spinners
+    
+    await Promise.all([minDelay, loadData]);
+    setRefreshing(false);
+  }, [routeId]);
+
+
+  // --- UI HELPERS ---
 
   const getStopStatus = (index: number): StopStatus => {
     if (index < currentStopIndex) return 'completed';
@@ -55,6 +105,7 @@ export default function RouteScreen() {
   };
 
   const isStopFullyMarked = (stop: StopWithStudents): boolean => {
+    if (stop.students.length === 0) return false;
     return stop.students.every(student => {
       const status = studentStatuses[student.id];
       return status && status !== 'pending';
@@ -66,10 +117,22 @@ export default function RouteScreen() {
   };
 
   const handleMarkAttendance = async (studentId: string, status: AttendanceStatus) => {
+    // 1. Optimistic UI Update
     setStudentStatuses(prev => ({ ...prev, [studentId]: status }));
-    // API call (commented for now, using local state)
-    console.log('handleMarkAttendance -> studentId: '+studentId+' | status :'+status);
-     await markAttendance({ tripId: '2', studentId, status });
+
+    // 2. API Call with actual Trip ID
+    if (tripId) {
+      try {
+        console.log(`Marking: Trip ${tripId}, Student ${studentId}, Status ${status}`);
+        await markAttendance({ tripId: tripId, studentId, status });
+        // Background poll will confirm this status in <5s
+      } catch (error) {
+        console.error("Failed to sync attendance", error);
+        Alert.alert("Sync Failed", "Could not save attendance. Please try again.");
+      }
+    } else {
+      Alert.alert("Error", "No active trip found. Cannot mark attendance.");
+    }
   };
 
   const getStatusIcon = (status: AttendanceStatus, size: number = 24) => {
@@ -87,7 +150,7 @@ export default function RouteScreen() {
     }
   };
 
-  const getStopMarkerStyle = (index: number) => {
+/*  const getStopMarkerStyle = (index: number) => {
     const status = getStopStatus(index);
     const isFullyMarked = isStopFullyMarked(stops[index]);
     
@@ -99,8 +162,40 @@ export default function RouteScreen() {
     }
     return { bg: 'bg-zinc-700', iconColor: '#A1A1AA' };
   };
+*/
+  const getStopMarkerStyle = (index: number) => {
+    const status = getStopStatus(index);
+    const isFullyMarked = isStopFullyMarked(stops[index]);
+    //console.log('index : '+index+' | isStopFullyMarked : '+isFullyMarked);
 
-  if (isLoading) {
+    // Default Pending Style
+    let style = { 
+      bg: 'bg-zinc-700', 
+      iconColor: '#A1A1AA', 
+      Icon: MapPin,
+      size: 'w-10 h-10', // Default size
+      iconSize: 18
+    };
+
+    if (status === 'completed') {
+      style.bg = 'bg-primary';
+      style.iconColor = '#FFFFFF';
+      // If fully marked, show CheckCircle instead of MapPin
+      if (isFullyMarked) {
+        style.Icon = CheckCircle;
+      }
+    } else if (status === 'current') {
+      style.bg = 'bg-primary';
+      style.iconColor = '#FFFFFF';
+      style.size = 'w-12 h-12'; // Slightly larger for current stop
+      style.iconSize = 22;      // Larger icon
+    }
+    
+    return style;
+  };
+
+  // Only show full screen loader on INITIAL load
+  if (isLoading && !refreshing) {
     return (
       <SafeAreaView className="flex-1 bg-background items-center justify-center">
         <ActivityIndicator size="large" color="#22C55E" />
@@ -118,7 +213,7 @@ export default function RouteScreen() {
         </Text>
       </View>
 
-      {/* Horizontal Progress Bar - 20% height */}
+      {/* Horizontal Progress Bar */}
       <View className="px-4 mb-4" style={{ height: '12%' }}>
         <View className="flex-1 justify-center">
           <View className="flex-row items-center">
@@ -131,11 +226,8 @@ export default function RouteScreen() {
               
               return (
                 <View key={stop.id} className="flex-row items-center flex-1">
-                  {/* Stop Dot */}
                   <TouchableOpacity
-                    //onPress={() => setHoveredStopId(hoveredStopId === stop.id ? null : stop.id)}
                     onPress={() => {
-                      // Toggle tooltip and sync with vertical timeline expansion
                       if (hoveredStopId === stop.id) {
                         setHoveredStopId(null);
                         setExpandedStopId(null);
@@ -146,7 +238,6 @@ export default function RouteScreen() {
                         }
                       }
                     }}
-
                     className="relative"
                   >
                     <View
@@ -161,7 +252,6 @@ export default function RouteScreen() {
                       {isCurrent && <MapPin size={12} color="#fff" />}
                     </View>
                     
-                    {/* Tooltip on click */}
                     {hoveredStopId === stop.id && (
                       <View className="absolute -top-10 left-1/2 -translate-x-1/2 bg-card border border-border rounded-lg px-3 py-1.5 z-10 min-w-[120px]">
                         <Text className="text-xs text-foreground text-center" numberOfLines={1}>
@@ -174,7 +264,6 @@ export default function RouteScreen() {
                     )}
                   </TouchableOpacity>
 
-                  {/* Connecting Line with Arrow */}
                   {!isLast && (
                     <View className="flex-1 flex-row items-center mx-1">
                       <View
@@ -192,7 +281,6 @@ export default function RouteScreen() {
             })}
           </View>
           
-          {/* Labels for first and last stop */}
           <View className="flex-row justify-between mt-2">
             <Text className="text-[10px] text-muted-foreground">Trip Start</Text>
             <Text className="text-[10px] text-muted-foreground">School</Text>
@@ -200,37 +288,39 @@ export default function RouteScreen() {
         </View>
       </View>
 
-      {/* Vertical Timeline with Expandable Stops */}
-      <ScrollView className="flex-1 px-4">
+      {/* Vertical Timeline - Wrapped with ScrollView & RefreshControl */}
+      <ScrollView 
+        className="flex-1 px-4"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#22C55E']} // Android Spinner Color
+            tintColor="#22C55E"  // iOS Spinner Color
+          />
+        }
+      >
         {stops.map((stop, index) => {
           const status = getStopStatus(index);
           const isExpanded = expandedStopId === stop.id;
           const markerStyle = getStopMarkerStyle(index);
           const isLast = index === stops.length - 1;
           const isFullyMarked = isStopFullyMarked(stop);
+          const MarkerIcon = markerStyle.Icon;
 
           return (
             <View key={stop.id} className="flex-row">
-              {/* Timeline */}
               <View className="items-center mr-4">
-                {/* Stop Marker */}
                 <View
                   className={`w-10 h-10 rounded-full items-center justify-center ${markerStyle.bg}`}
                 >
-                  <MapPin size={18} color={markerStyle.iconColor} />
+                  <MarkerIcon size={markerStyle.iconSize} color={markerStyle.iconColor} />
                 </View>
-                
-                {/* Connecting Line */}
                 {!isLast && (
-                  <View
-                    className={`w-0.5 flex-1 min-h-[20px] ${
-                      status === 'completed' && isFullyMarked ? 'bg-primary' : 'bg-zinc-700'
-                    }`}
-                  />
+                  <View className={`w-0.5 flex-1 min-h-[20px] ${status === 'completed' ? 'bg-primary' : 'bg-zinc-700'}`} />
                 )}
               </View>
 
-              {/* Stop Card */}
               <View className="flex-1 pb-4">
                 <TouchableOpacity
                   onPress={() => stop.students.length > 0 && toggleExpand(stop.id)}
@@ -238,7 +328,6 @@ export default function RouteScreen() {
                     status === 'current' ? 'border-2 border-primary' : 'border border-border'
                   }`}
                 >
-                  {/* Stop Header */}
                   <View className="p-4">
                     <View className="flex-row items-center justify-between">
                       <View className="flex-1">
@@ -267,7 +356,6 @@ export default function RouteScreen() {
                     </View>
                   </View>
 
-                  {/* Expanded Student List */}
                   {isExpanded && stop.students.length > 0 && (
                     <View className="border-t border-border">
                       {stop.students.map((student, studentIndex) => {
@@ -281,13 +369,10 @@ export default function RouteScreen() {
                             }`}
                           >
                             <View className="flex-row items-center">
-                              {/* Student Avatar */}
                               <Image
                                 source={{ uri: student.photoUrl || 'https://via.placeholder.com/100' }}
                                 className="w-10 h-10 rounded-full bg-secondary"
                               />
-                              
-                              {/* Student Info */}
                               <View className="flex-1 ml-3">
                                 <Text className="text-sm font-medium text-foreground">
                                   {student.name}
@@ -297,7 +382,6 @@ export default function RouteScreen() {
                                 </Text>
                               </View>
 
-                              {/* Attendance Buttons */}
                               <View className="flex-row items-center gap-2">
                                 <TouchableOpacity
                                   onPress={() => handleMarkAttendance(student.id, 'present')}
@@ -306,9 +390,9 @@ export default function RouteScreen() {
                                   }`}
                                 >
                                   <CheckCircle
-                                    size={20}
+                                    size={currentStatus === 'present' ? 30 : 24}
                                     color={currentStatus === 'present' ? '#22C55E' : '#52525B'}
-                                    fill={currentStatus === 'present' ? '#22C55E' : 'transparent'}
+                                    strokeWidth={currentStatus === 'present' ? 2 : 2}
                                   />
                                 </TouchableOpacity>
                                 
@@ -319,9 +403,8 @@ export default function RouteScreen() {
                                   }`}
                                 >
                                   <XCircle
-                                    size={20}
+                                    size={currentStatus === 'absent' ? 30 : 24}
                                     color={currentStatus === 'absent' ? '#EF4444' : '#52525B'}
-                                    fill={currentStatus === 'absent' ? '#EF4444' : 'transparent'}
                                   />
                                 </TouchableOpacity>
                               </View>
