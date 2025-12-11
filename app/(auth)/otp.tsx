@@ -1,5 +1,6 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { BackHandler } from 'react-native';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -16,7 +17,10 @@ import { verifyOtp } from '../../services/api-rest';
 import { isTermsAccepted } from '../../services/storage';
 
 export default function OtpScreen() {
-  const { phoneNumber } = useLocalSearchParams<{ phoneNumber: string }>();
+  // ✅ State for phone number
+  const { phoneNumber: passedPhone } = useLocalSearchParams<{ phoneNumber?: string }>();
+  const [phoneNumber, setPhoneNumber] = useState(passedPhone || '');
+
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(30);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +29,7 @@ export default function OtpScreen() {
   const inputRefs = useRef<TextInput[]>([]);
   const { login } = useAuth();
 
-  // Auto-focus on screen focus
+  // Auto-focus first input on screen focus
   useFocusEffect(
     useCallback(() => {
       if (!phoneNumber) {
@@ -49,6 +53,21 @@ export default function OtpScreen() {
     return () => clearInterval(interval);
   }, []);
 
+  // Android back button → go to Sign-In with phone number
+  useEffect(() => {
+    const onBackPress = () => {
+      router.replace({
+        pathname: '/(auth)/sign-in',
+        params: { phoneNumber },
+      });
+      return true;
+    };
+
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => sub.remove();
+  }, [phoneNumber]);
+
+  // Handle OTP input changes
   const handleOtpChange = (value: string, index: number) => {
     const newOtp = [...otp];
 
@@ -97,7 +116,7 @@ export default function OtpScreen() {
     setError('');
 
     try {
-      const response = await verifyOtp({ phoneNumber: phoneNumber!, otp: otpString });
+      const response = await verifyOtp({ phoneNumber, otp: otpString });
 
       if (response.success && response.data) {
         await login(response.data.token, response.data.user);
@@ -122,14 +141,11 @@ export default function OtpScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-
       <KeyboardAvoidingView
-        behavior="padding"            // ⭐ FIX HERE
+        behavior="padding"
         style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 20}   // ⭐ FIX HERE
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 20}
       >
-
-        {/* Scrollable content */}
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
@@ -140,7 +156,6 @@ export default function OtpScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View className="flex-1">
-
             {/* Header */}
             <Text className="text-2xl font-semibold text-center text-foreground mb-2">
               Enter code sent to your phone
@@ -163,9 +178,7 @@ export default function OtpScreen() {
                   autoFocus={index === 0}
                   value={digit}
                   onChangeText={(value) => handleOtpChange(value, index)}
-                  onKeyPress={({ nativeEvent }) =>
-                    handleKeyPress(nativeEvent.key, index)
-                  }
+                  onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
                   keyboardType="number-pad"
                   maxLength={1}
                   onFocus={() => setFocusedIndex(index)}
@@ -202,12 +215,7 @@ export default function OtpScreen() {
         </ScrollView>
 
         {/* Fixed Next Button */}
-        <View
-          style={{
-            padding: 16,
-            backgroundColor: 'transparent',
-          }}
-        >
+        <View style={{ padding: 16, backgroundColor: 'transparent' }}>
           <TouchableOpacity
             onPress={handleNext}
             disabled={otp.join('').length !== 6 || isLoading}
@@ -224,7 +232,6 @@ export default function OtpScreen() {
             )}
           </TouchableOpacity>
         </View>
-
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
