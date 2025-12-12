@@ -22,12 +22,17 @@ import {
 } from 'react-native';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '../../contexts/AuthContext';
 import { getStudents, Student } from '../../services/api-rest';
 
 export default function StudentsScreen() {
   const [students, setStudents] = useState<Student[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'present' | 'absent' | 'pending'>('all');
+  const { user } = useAuth();
+
+  const busId = user?.assignedBus?.id || '6';
+  console.log(busId);
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -37,10 +42,9 @@ export default function StudentsScreen() {
 
   const loadStudents = async () => {
     try {
-      let busId = '2';
       let branchId = '0';
       let stopId = '0';
-      const response = await getStudents({ branchId, busId: '6', stopId });
+      const response = await getStudents({ branchId, busId, stopId });
 
       if (response.success && response.data) {
         setStudents(response.data);
