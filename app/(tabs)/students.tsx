@@ -9,7 +9,7 @@ import {
   XCircle
 } from 'lucide-react-native';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -18,12 +18,15 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
+  
 } from 'react-native';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
 import { getStudents, Student } from '../../services/api-rest';
+import { useFocusEffect } from '@react-navigation/native';
+
 
 export default function StudentsScreen() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -36,9 +39,13 @@ export default function StudentsScreen() {
 
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+  useFocusEffect(
+    useCallback(() => {
+    setIsLoading(true);
     loadStudents();
-  }, []);
+  }, [])
+  );
+
 
   const loadStudents = async () => {
     try {
