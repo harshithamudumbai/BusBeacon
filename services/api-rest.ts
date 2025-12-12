@@ -251,6 +251,50 @@ export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
   attender: 'Mark attendance & manage trips',
 };
 
+// Live tracking API payload
+export interface LiveBusLocationData {
+  tripId: string;
+  busId: string;
+  routeId: string;
+
+  currentLocation: {
+    latitude: number;
+    longitude: number;
+    speed: number | null;
+    timestamp: string;
+  };
+
+  nearestStop: {
+    index: number; // 0-based
+    id: string;
+    name: string;
+    distanceInMeters: number;
+  };
+
+  nextStop: {
+    index: number;
+    id: string;
+    name: string;
+    distanceInMeters: number;
+  };
+
+  progress: number; // 0.0 - 1.0
+
+  virtual: {
+    pointDistance: number; // meters
+    virtualCount: number;
+  };
+}
+
+
+/**
+ * Get live tracking for a route (backend: getBusLiveTracking.php)
+ */
+export async function getRouteBusLocation(routeId: string): Promise<ApiResponse<LiveBusLocationData>> {
+  //const url = `${API_BASE_URL}/getBusLiveTracking.php?routeId=${encodeURIComponent(routeId)}`;
+  return apiRequest(`/routes/${encodeURIComponent(routeId)}/live-bus-location`, 'GET')
+}
+
 
 export interface BusLocationData {
   tripId: string | null;
