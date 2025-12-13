@@ -13,17 +13,26 @@ export default function ProfileScreen() {
   };
 
   // Menu items
-  const menuItems = [
-    { icon: User, label: 'Edit Profile', onPress: () => {} },
-    { icon: Bell, label: 'Notification Settings', onPress: () => {} },
-    { icon: Shield, label: 'Privacy & Security', onPress: () => {} },
-    { 
-      icon: HelpCircle, 
-      label: 'Help & Support', 
-      onPress: () => router.push('/help-support') 
-    },
-    { label: 'App Settings', onPress: () => router.push('/settings') },
-  ];
+const menuItems = [
+  { icon: User, label: 'Edit Profile', onPress: () => router.push('/details') },
+  { icon: Bell, label: 'Notification Settings', onPress: () => {} },
+  { 
+    icon: Shield, 
+    label: 'Privacy & Security', 
+    onPress: () => router.push('/privacy-security') 
+  },
+  { 
+    icon: HelpCircle, 
+    label: 'Help & Support', 
+    onPress: () => router.push('/help-support') 
+  },
+  { 
+    icon: Settings, 
+    label: 'App Settings', 
+    onPress: () => router.push('/settings') 
+  },
+];
+
 
   return (
     <SafeAreaView className="flex-1 bg-background">
