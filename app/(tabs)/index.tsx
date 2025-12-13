@@ -1,16 +1,16 @@
 import { router } from 'expo-router';
 import { AlertTriangle, Bell, Building, Bus, CheckCircle, ChevronRight, Clock, MapPin, RefreshCw, Settings, User, Users } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
-import { DashboardStats, getDashboardStats, getTodayTrips, TodayTrips } from '../../services/api-rest';
+import { DashboardStats, getDashboardStats, getTodayTrips, ROLE_LABELS, TodayTrips } from '../../services/api-rest';
 //import { isFirstTime, setFirstTimeComplete } from '../../services/storage';
 import { clearShowWelcome, shouldShowWelcome } from '../../services/storage';
 
-
+// Attender Home Screen
 function AttenderHome() {
-  const { user } = useAuth();
+  const { user,selectedRole } = useAuth();
   const [showWelcome, setShowWelcome] = useState(false);
   const [tripsData, setTripsData] = useState<TodayTrips | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,30 +56,46 @@ function AttenderHome() {
     <SafeAreaView className="flex-1 bg-background">
       <Modal visible={showWelcome} transparent animationType="fade">
       </Modal>
-
+      
       <ScrollView className="flex-1 px-4">
         <View className="flex-row items-center justify-between py-4">
           <TouchableOpacity onPress={() => router.push('/profile')} className="w-10 h-10 bg-secondary rounded-full items-center justify-center mr-3">
               <User size={20} color="#FAFAFA" />
           </TouchableOpacity>
-          <Text className="text-base font-semibold text-foreground flex-1">Hello, {user?.name || 'User'}</Text>
+          <View className="flex-1">
+            <Text className="text-lg font-semibold text-foreground">Hello, {user?.name || 'User'}  </Text>
+            {selectedRole && (<Text className="text-sm text-muted-foreground"> {ROLE_LABELS[selectedRole]}</Text>)}
+          </View>
           <TouchableOpacity onPress={() => router.push('/notifications')} className="w-10 h-10 bg-secondary rounded-full items-center justify-center">
             <Bell size={20} color="#FAFAFA" />
           </TouchableOpacity>
         </View>
-        <View className="mb-6">
-          <View className="flex-row w-full items-start justify-between">
-            <View className="flex-col items-start"> 
-
-              <View className="w-20 h-20 rounded-xl bg-primary mb-3 shadow-md shadow-primary/20" /> 
-
-              <View className="pt-0">
-                <Text className="text-xl font-bold text-foreground">{user?.name || 'Agni Kumar'}</Text>
-                <Text className="text-sm text-muted-foreground tracking-wider">BUS ATTENDANT</Text>
-              </View>
+        {/*
+        <TouchableOpacity onPress={() => router.push('/profile')} className="bg-card rounded-2xl p-4 mb-6">
+          <View className="flex-row items-center">
+            <Image source={{ uri: user?.avatar || 'https://via.placeholder.com/60' }} className="w-14 h-14 rounded-full bg-secondary" />
+            <View className="flex-1 ml-4">
+              <Text className="text-base font-semibold text-foreground">{user?.name || 'John Doe'}</Text>
+              <Text className="text-sm text-muted-foreground">Route: {user?.assignedRoute?.code || 'R-12'} • Bus: {user?.assignedBus?.number || 'KA-01-1234'}</Text>
             </View>
          
           </View>
+        </TouchableOpacity>
+        */}
+        <View className="flex-row w-full justify-between mt-6">
+          <View className="bg-card rounded-2xl p-4 flex-1 mr-3 border border-border/50">
+            <Text className="text-xs text-muted-foreground mb-1 font-medium">ROUTE NUMBER</Text>
+            <Text className="text-xl font-bold text-foreground mt-1">{user?.assignedRoute?.code || '11'}</Text>
+          </View>
+          <View className="bg-card rounded-2xl p-4 flex-1 border border-border/50">
+            <Text className="text-xs text-muted-foreground mb-1 font-medium">BUS NUMBER</Text>
+            <Text className="text-xl font-bold text-foreground mt-1">{user?.assignedBus?.number || 'TS09 EK 3274'}</Text>
+          </View>
+        </View>
+
+        <View className="flex-row w-full justify-between mt-6">
+          <Text className="text-lg font-semibold text-foreground mb-4">Start Today's Service</Text>
+        </View>
 
           <View className="flex-row w-full justify-between mt-6">
             <View className="bg-card rounded-2xl p-4 flex-1 mr-3 border border-border/50">
