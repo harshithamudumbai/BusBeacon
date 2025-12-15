@@ -2,45 +2,56 @@ import {
   CheckCircle,
   Clock,
   Hourglass,
+  Phone,
   Search,
   Shuffle,
   Timer,
-  XCircle,
-  Phone
+  XCircle
 } from 'lucide-react-native';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   ActivityIndicator,
   Image,
+  Linking,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  Linking
+  
 } from 'react-native';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '../../contexts/AuthContext';
 import { getStudents, Student } from '../../services/api-rest';
+import { useFocusEffect } from '@react-navigation/native';
+
 
 export default function StudentsScreen() {
   const [students, setStudents] = useState<Student[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'present' | 'absent' | 'pending'>('all');
+  const { user } = useAuth();
+
+  const busId = user?.assignedBus?.id || '6';
+  console.log(busId);
 
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+  useFocusEffect(
+    useCallback(() => {
+    setIsLoading(true);
     loadStudents();
-  }, []);
+  }, [])
+  );
+
 
   const loadStudents = async () => {
     try {
-      let busId = '2';
       let branchId = '0';
       let stopId = '0';
-      const response = await getStudents({ branchId, busId: '1', stopId });
+      const response = await getStudents({ branchId, busId, stopId });
 
       if (response.success && response.data) {
         setStudents(response.data);

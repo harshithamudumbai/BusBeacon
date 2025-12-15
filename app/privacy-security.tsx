@@ -59,8 +59,34 @@ export default function PrivacySecurityScreen() {
           </Text>
         </View>
 
+        {/* Privacy Info Section */}
+        <View className="bg-card rounded-2xl p-6 mb-4">
+          <View className="flex-row items-center mb-4">
+            <Shield size={22} color="#22C55E" />
+            <Text className="ml-3 text-base font-semibold text-foreground">
+              Your Privacy
+            </Text>
+          </View>
+
+          <Text className="text-sm text-muted-foreground mb-2">
+            • The app only collects information necessary for attendance and trip management.
+          </Text>
+          <Text className="text-sm text-muted-foreground mb-2">
+            • All data is securely stored on the server.
+          </Text>
+          <Text className="text-sm text-muted-foreground mb-2">
+            • Your phone number is used only for authentication.
+          </Text>
+          <Text className="text-sm text-muted-foreground mb-2">
+            • Location is tracked only during active trips for safety.
+          </Text>
+          <Text className="text-sm text-muted-foreground">
+            • For any changes or issues, contact your administrator.
+          </Text>
+        </View>
+
         {/* Note Section */}
-        <View className="bg-secondary/40 rounded-2xl p-5">
+        <View className="bg-secondary/40 rounded-2xl p-5 mb-6">
           <View className="flex-row items-center mb-2">
             <Info size={18} color="#71717A" />
             <Text className="ml-2 text-base font-semibold text-foreground">
@@ -69,8 +95,8 @@ export default function PrivacySecurityScreen() {
           </View>
 
           <Text className="text-sm text-muted-foreground">
-            Profile and security settings cannot be edited.  
-            If you need to make changes, please contact the administrator.
+            Profile and security settings cannot be edited. If you need to make changes,
+            please contact the administrator.
           </Text>
         </View>
       </ScrollView>
