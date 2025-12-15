@@ -147,7 +147,12 @@ function AttenderHome() {
                 <Text className="text-sm text-muted-foreground ml-1">{pickupTrip?.totalStudents || 0} Students</Text>
               </View>
             </View>
-            <TouchableOpacity className="bg-primary mt-4 py-3 rounded-xl items-center">
+            <TouchableOpacity onPress={() =>
+                          router.replace({
+                          pathname: '/(tabs)/route',
+                          params: { fromStartPickup: 'true' },
+                       })
+                  } className="bg-primary mt-4 py-3 rounded-xl items-center">
               <Text className="text-primary-foreground font-semibold">Start Pick-up</Text>
             </TouchableOpacity>
           </View>
