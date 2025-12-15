@@ -1,25 +1,36 @@
 import { router } from 'expo-router';
 import { AlertTriangle, Bell, Building, Bus, CheckCircle, ChevronRight, Clock, MapPin, RefreshCw, Settings, User, Users } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
-import { DashboardStats, getDashboardStats, getTodayTrips, TodayTrips } from '../../services/api-rest';
+import { DashboardStats, getDashboardStats, getTodayTrips, ROLE_LABELS, TodayTrips } from '../../services/api-rest';
 //import { isFirstTime, setFirstTimeComplete } from '../../services/storage';
 import { clearShowWelcome, shouldShowWelcome } from '../../services/storage';
 
 
+// Attender Home Screen
 function AttenderHome() {
-  const { user } = useAuth();
+  const { user,selectedRole } = useAuth();
   const [showWelcome, setShowWelcome] = useState(false);
   const [tripsData, setTripsData] = useState<TodayTrips | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    //checkFirstTime();
     checkShowWelcome();
     loadTripsData();
   }, []);
 
+    /*  
+    const checkFirstTime = async () => {
+    const firstTime = await isFirstTime();
+    if (firstTime) {
+      setShowWelcome(true);
+      await setFirstTimeComplete();
+    }
+  };
+  */
   const checkShowWelcome = async () => {
     const show = await shouldShowWelcome();
     if (show) {
@@ -55,89 +66,113 @@ function AttenderHome() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <Modal visible={showWelcome} transparent animationType="fade">
+        <View className="flex-1 bg-black/50 items-center justify-center px-6">
+          <View className="bg-card rounded-3xl p-8 w-full max-w-sm items-center">
+            <View className="w-20 h-20 bg-primary/20 rounded-full items-center justify-center mb-6">
+              <Text className="text-4xl">🚌</Text>
+            </View>
+            <Text className="text-xl font-semibold text-foreground mb-2">Welcome to BusBeacon!</Text>
+            <Text className="text-sm text-muted-foreground text-center mb-6">Your companion for safe and efficient school bus management.</Text>
+            <TouchableOpacity onPress={() => setShowWelcome(false)} className="bg-primary w-full py-3 rounded-xl items-center">
+              <Text className="text-primary-foreground font-semibold">Get Started</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </Modal>
-
+      
       <ScrollView className="flex-1 px-4">
         <View className="flex-row items-center justify-between py-4">
           <TouchableOpacity onPress={() => router.push('/profile')} className="w-10 h-10 bg-secondary rounded-full items-center justify-center mr-3">
               <User size={20} color="#FAFAFA" />
           </TouchableOpacity>
-          <Text className="text-base font-semibold text-foreground flex-1">Hello, {user?.name || 'User'}</Text>
+          <View className="flex-1">
+            <Text className="text-lg font-semibold text-foreground">Hello, {user?.name || 'User'}  </Text>
+            {selectedRole && (<Text className="text-sm text-muted-foreground"> {ROLE_LABELS[selectedRole]}</Text>)}
+          </View>
           <TouchableOpacity onPress={() => router.push('/notifications')} className="w-10 h-10 bg-secondary rounded-full items-center justify-center">
             <Bell size={20} color="#FAFAFA" />
           </TouchableOpacity>
         </View>
-        <View className="mb-6">
-          <View className="flex-row w-full items-start justify-between">
-            <View className="flex-col items-start"> 
-
-              <View className="w-20 h-20 rounded-xl bg-primary mb-3 shadow-md shadow-primary/20" /> 
-
-              <View className="pt-0">
-                <Text className="text-xl font-bold text-foreground">{user?.name || 'Agni Kumar'}</Text>
-                <Text className="text-sm text-muted-foreground tracking-wider">BUS ATTENDANT</Text>
-              </View>
+        {/*
+        <TouchableOpacity onPress={() => router.push('/profile')} className="bg-card rounded-2xl p-4 mb-6">
+          <View className="flex-row items-center">
+            <Image source={{ uri: user?.avatar || 'https://via.placeholder.com/60' }} className="w-14 h-14 rounded-full bg-secondary" />
+            <View className="flex-1 ml-4">
+              <Text className="text-base font-semibold text-foreground">{user?.name || 'John Doe'}</Text>
+              <Text className="text-sm text-muted-foreground">Route: {user?.assignedRoute?.code || 'R-12'} • Bus: {user?.assignedBus?.number || 'KA-01-1234'}</Text>
             </View>
-         
+            <ChevronRight size={20} color="#71717A" />
           </View>
-
-          <View className="flex-row w-full justify-between mt-6">
-            <View className="bg-card rounded-2xl p-4 flex-1 mr-3 border border-border/50">
-              <Text className="text-xs text-muted-foreground mb-1 font-medium">ROUTE NUMBER</Text>
-              <Text className="text-xl font-bold text-foreground mt-1">{user?.assignedRoute?.code || '11'}</Text>
-            </View>
-            <View className="bg-card rounded-2xl p-4 flex-1 border border-border/50">
-              <Text className="text-xs text-muted-foreground mb-1 font-medium">BUS NUMBER</Text>
-              <Text className="text-xl font-bold text-foreground mt-1">{user?.assignedBus?.number || 'TS09 EK 3274'}</Text>
-            </View>
+        </TouchableOpacity>
+        */}
+        <View className="flex-row w-full justify-between mt-6">
+          <View className="bg-card rounded-2xl p-4 flex-1 mr-3 border border-border/50">
+            <Text className="text-xs text-muted-foreground mb-1 font-medium">ROUTE NUMBER</Text>
+            <Text className="text-xl font-bold text-foreground mt-1">{user?.assignedRoute?.code || '11'}</Text>
           </View>
-
-          <View className="w-full rounded-2xl p-4 mt-4">
-            <Text className="text-xs text-muted-foreground mb-2 font-medium">DATE</Text>
-            <Text className="text-sm font-semibold text-foreground mb-1">{tripsData?.date || 'Monday, 15 October'}</Text>
-            <View className="flex-row items-center">
-              <View className={`w-2.5 h-2.5 rounded-full ${tripsData?.hasActiveTrip ? 'bg-primary' : 'bg-red-500'} mr-2`} />
-              <Text className="text-xs text-muted-foreground font-medium">{tripsData?.hasActiveTrip ? 'Active trip' : 'No active trip'}</Text>
-            </View>
+          <View className="bg-card rounded-2xl p-4 flex-1 border border-border/50">
+            <Text className="text-xs text-muted-foreground mb-1 font-medium">BUS NUMBER</Text>
+            <Text className="text-xl font-bold text-foreground mt-1">{user?.assignedBus?.number || 'TS09 EK 3274'}</Text>
           </View>
         </View>
 
-        <Text className="text-lg font-bold text-foreground mt-4 mb-4">Start Today's Service</Text>
+        <View className="flex-row w-full justify-between mt-6">
+          <Text className="text-lg font-semibold text-foreground mb-4">Start Today's Service</Text>
+        </View>
 
-        <View className="flex-row w-full justify-between mb-6">
-          <View className="flex-1 mr-3 rounded-2xl">
-            <TouchableOpacity
-              onPress={() => { /* Start Pick-up logic here */ }}
-              className="bg-card rounded-2xl p-4 h-full border border-primary/50 shadow-sm shadow-primary/10"
-            >
-              <Text className="text-base font-bold text-primary mb-1">Start Pick-Up</Text>
-              <Text className="text-xs text-foreground/80 mb-2 font-medium">
-                {pickupTrip?.startTime || '6:30 AM'} - {pickupTrip ? '8:00 AM' : '8:00 AM'}
-              </Text>
-              <Text className="text-xs text-muted-foreground mb-6">
-                {pickupTrip?.stops || 5} stops | {pickupTrip?.totalStudents || 23} students
-              </Text>
-              <View className="self-end p-2 bg-primary rounded-full">
-                <ChevronRight size={20} color="#FAFAFA" />
+        <View className="bg-card rounded-2xl p-4 mb-4">
+          <View className="flex-row items-center justify-between mb-4">
+            <Text className="text-sm text-muted-foreground">{tripsData?.date || 'Today'}</Text>
+            <View className="bg-primary/20 px-3 py-1 rounded-full">
+              <Text className="text-xs text-primary font-medium">{tripsData?.hasActiveTrip ? 'Trip Active' : 'No Active Trip'}</Text>
+            </View>
+          </View>
+
+          {/* Pickup Card */}
+          <View className="bg-secondary rounded-xl p-4 mb-3">
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-base font-semibold text-foreground">Morning Pick-up</Text>
+              <View className="flex-row items-center">
+                <Clock size={14} color="#71717A" />
+                <Text className="text-sm text-muted-foreground ml-1">{pickupTrip?.startTime || '7:00 AM'}</Text>
               </View>
+            </View>
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center">
+                <MapPin size={14} color="#71717A" />
+                <Text className="text-sm text-muted-foreground ml-1">{pickupTrip?.stops || 0} Stops</Text>
+              </View>
+              <View className="flex-row items-center">
+                <Users size={14} color="#71717A" />
+                <Text className="text-sm text-muted-foreground ml-1">{pickupTrip?.totalStudents || 0} Students</Text>
+              </View>
+            </View>
+            <TouchableOpacity className="bg-primary mt-4 py-3 rounded-xl items-center">
+              <Text className="text-primary-foreground font-semibold">Start Pick-up</Text>
             </TouchableOpacity>
           </View>
 
-          <View className="flex-1 rounded-2xl">
-            <TouchableOpacity
-              onPress={() => { /* Start Drop-Off logic here */ }}
-              className="bg-card rounded-2xl p-4 h-full border border-border shadow-sm shadow-secondary/10"
-            >
-              <Text className="text-base font-bold text-foreground mb-1">Start Drop-Off</Text>
-              <Text className="text-xs text-foreground/80 mb-2 font-medium">
-                {dropoffTrip?.startTime || '2:30 PM'} - {dropoffTrip ? '4:00 PM' : '4:00 PM'}
-              </Text>
-              <Text className="text-xs text-muted-foreground mb-6">
-                {dropoffTrip?.stops || 5} stops | {dropoffTrip?.totalStudents || 23} students
-              </Text>
-              <View className="self-end p-2 bg-card rounded-full border border-border">
-                <ChevronRight size={20} color="#22C55E" />
+          {/* Dropoff Card */}
+          <View className="bg-secondary rounded-xl p-4">
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-base font-semibold text-foreground">Afternoon Drop-off</Text>
+              <View className="flex-row items-center">
+                <Clock size={14} color="#71717A" />
+                <Text className="text-sm text-muted-foreground ml-1">{dropoffTrip?.startTime || '3:30 PM'}</Text>
               </View>
+            </View>
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center">
+                <MapPin size={14} color="#71717A" />
+                <Text className="text-sm text-muted-foreground ml-1">{dropoffTrip?.stops || 0} Stops</Text>
+              </View>
+              <View className="flex-row items-center">
+                <Users size={14} color="#71717A" />
+                <Text className="text-sm text-muted-foreground ml-1">{dropoffTrip?.totalStudents || 0} Students</Text>
+              </View>
+            </View>
+            <TouchableOpacity className="bg-secondary border border-border mt-4 py-3 rounded-xl items-center">
+              <Text className="text-foreground font-semibold">Start Drop-off</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -146,8 +181,6 @@ function AttenderHome() {
     </SafeAreaView>
   );
 }
-
-
 
 // Transport Manager Dashboard
 function TMDashboard() {
