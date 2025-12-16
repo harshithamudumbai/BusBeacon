@@ -19,7 +19,7 @@ INSERT INTO `base_schoolname` (`schoolid`, `schoolname`, `sname`, `code`, `urlva
 INSERT INTO `base_user_roles` (`id`, `userrole`, `academicflag`, `attendanceflag`, `classteacherflag`) VALUES
 (1, 'Super Admin', 0, 0, 0),
 (2, 'Transport Manager', 0, 0, 0),
-(3, 'Office Admin', 0, 0, 0),
+(7, 'Office Admin', 0, 0, 0),
 (4, 'Bus Attender', 0, 0, 0),
 (5, 'Parent', 0, 0, 0),
 (6, 'Student', 1, 1, 0),
@@ -37,7 +37,7 @@ INSERT INTO `jos_users` (`id`, `schoolid`, `deptid`, `rollnumber`, `sapid`, `eve
 
 -- Transport Managers
 (2, 1, 0, '', '', 0, '2', 'enc_umadevi', 'Uma Devi', 'umadevi', 'uma@dis.edu.in', 9087654321, 'hashed_pwd', 'Uma@123', 'Staff', 0, 1, 1, '2024-01-01 00:00:00', '2025-12-08 09:00:00', '', '', 1),
-(3, 1, 0, '', '', 0, '2', 'enc_vikram', 'Vikram Singh', 'vikramsingh', 'vikram@dis.edu.in', 9123456789, 'hashed_pwd', 'Vikram@123', 'Staff', 0, 1, 1, '2024-01-01 00:00:00', '2025-12-08 09:30:00', '', '', 1),
+(7, 1, 0, '', '', 0, '2', 'enc_vikram', 'Vikram Singh', 'vikramsingh', 'vikram@dis.edu.in', 9123456789, 'hashed_pwd', 'Vikram@123', 'Staff', 0, 1, 1, '2024-01-01 00:00:00', '2025-12-08 09:30:00', '', '', 1),
 
 -- Office Admins
 (4, 1, 0, '', '', 0, '3', 'enc_sunita', 'Sunita Rao', 'sunitarao', 'sunita@dis.edu.in', 8097654321, 'hashed_pwd', 'Sunita@123', 'Staff', 0, 1, 1, '2024-01-01 00:00:00', '2025-12-08 08:00:00', '', '', 1),
@@ -81,7 +81,7 @@ INSERT INTO `jos_users` (`id`, `schoolid`, `deptid`, `rollnumber`, `sapid`, `eve
 INSERT INTO `base_sections` (`id`, `mastersectionid`, `schoolid`, `deptid`, `alternatedeptid`, `programid`, `seccatid`, `name`, `aliasname`, `published`, `yearord`, `yearname`, `cestructureid`, `subsection`, `placementsflag`, `dummysection`, `gradetype`) VALUES
 (1, NULL, 1, 1, 0, 1, 1, 'Class 3 - Section A', '3A', 1, 3, '3rd', 1, 'A', 0, 0, 1),
 (2, NULL, 1, 1, 0, 1, 1, 'Class 3 - Section B', '3B', 1, 3, '3rd', 1, 'B', 0, 0, 1),
-(3, NULL, 1, 1, 0, 1, 1, 'Class 4 - Section A', '4A', 1, 4, '4th', 1, 'A', 0, 0, 1),
+(7, NULL, 1, 1, 0, 1, 1, 'Class 4 - Section A', '4A', 1, 4, '4th', 1, 'A', 0, 0, 1),
 (4, NULL, 1, 1, 0, 1, 1, 'Class 4 - Section B', '4B', 1, 4, '4th', 1, 'B', 0, 0, 1),
 (5, NULL, 1, 1, 0, 1, 1, 'Class 5 - Section A', '5A', 1, 5, '5th', 1, 'A', 0, 0, 1),
 (6, NULL, 1, 1, 0, 1, 1, 'Class 5 - Section B', '5B', 1, 5, '5th', 1, 'B', 0, 0, 1),
@@ -97,7 +97,7 @@ INSERT INTO `base_sections` (`id`, `mastersectionid`, `schoolid`, `deptid`, `alt
 INSERT INTO `base_bus_assets` (`id`, `schoolid`, `assetname`, `chassisnumber`, `capacity`, `status`) VALUES
 (1, 1, 'TS09EK3274', 'CHAS2024001', 40, 1),
 (2, 1, 'TS09EK5678', 'CHAS2024002', 35, 1),
-(3, 1, 'TS09EK9012', 'CHAS2024003', 30, 0),
+(7, 1, 'TS09EK9012', 'CHAS2024003', 30, 0),
 (4, 1, 'TS09EK1234', 'CHAS2024004', 45, 1),
 (5, 2, 'TS09EK5555', 'CHAS2024005', 40, 1);
 
@@ -111,7 +111,7 @@ INSERT INTO `base_bus_routes` (`id`, `schoolid`, `bus_asset_id`, `route`, `start
 -- Route 12 - Dropoff
 (2, 1, 1, 'Route 12 - Dropoff', '2024-06-01', '2025-05-31', 2, 1, '2024-06-01 00:00:00', 1, '2024-06-01 00:00:00', 2),
 -- Route 15 - Pickup
-(3, 1, 2, 'Route 15 - Pickup', '2024-06-01', '2025-05-31', 1, 1, '2024-06-01 00:00:00', 1, '2024-06-01 00:00:00', 3),
+(7, 1, 2, 'Route 15 - Pickup', '2024-06-01', '2025-05-31', 1, 1, '2024-06-01 00:00:00', 1, '2024-06-01 00:00:00', 3),
 -- Route 15 - Dropoff
 (4, 1, 2, 'Route 15 - Dropoff', '2024-06-01', '2025-05-31', 2, 1, '2024-06-01 00:00:00', 1, '2024-06-01 00:00:00', 4),
 -- Route 20 - Pickup
@@ -126,7 +126,7 @@ INSERT INTO `base_bus_stages` (`id`, `routeid`, `stagenumber`, `stage`, `latitud
 -- Route 12 Pickup Stops (routeid = 1)
 (1, 1, 1, 'Green Park Colony', 17.4156000, 78.4347000, '06:30:00'),
 (2, 1, 2, 'Hauz Khas Village', 17.4167000, 78.4389000, '06:45:00'),
-(3, 1, 3, 'Malviya Nagar', 17.4234000, 78.4456000, '07:00:00'),
+(7, 1, 3, 'Malviya Nagar', 17.4234000, 78.4456000, '07:00:00'),
 (4, 1, 4, 'Saket', 17.4312000, 78.4523000, '07:15:00'),
 (5, 1, 5, 'School Main Gate', 17.4456000, 78.4634000, '07:30:00'),
 
@@ -162,7 +162,7 @@ INSERT INTO `base_bus_stages` (`id`, `routeid`, `stagenumber`, `stage`, `latitud
 INSERT INTO `base_bus_asset_route_attendant_map` (`id`, `schoolid`, `assetid`, `routeid`, `attendantid`, `fromtime`, `totime`, `createdon`, `createdby`, `modifiedon`, `modifiedby`) VALUES
 (1, 1, 1, 1, 6, 600, 800, '2024-06-01 00:00:00', 1, '2024-06-01 00:00:00', 1),  -- Raju on Route 12 Pickup
 (2, 1, 1, 2, 6, 1500, 1700, '2024-06-01 00:00:00', 1, '2024-06-01 00:00:00', 1),  -- Raju on Route 12 Dropoff
-(3, 1, 2, 3, 7, 630, 800, '2024-06-01 00:00:00', 1, '2024-06-01 00:00:00', 1),  -- Suresh on Route 15 Pickup
+(7, 1, 2, 3, 7, 630, 800, '2024-06-01 00:00:00', 1, '2024-06-01 00:00:00', 1),  -- Suresh on Route 15 Pickup
 (4, 1, 2, 4, 7, 1500, 1700, '2024-06-01 00:00:00', 1, '2024-06-01 00:00:00', 1),  -- Suresh on Route 15 Dropoff
 (5, 1, 4, 5, 8, 600, 800, '2024-06-01 00:00:00', 1, '2024-06-01 00:00:00', 1);  -- Ramesh on Route 20 Pickup
 
@@ -174,7 +174,7 @@ INSERT INTO `base_bus_user_routes` (`id`, `userid`, `buspassno`, `stageid`, `fro
 -- Students on Route 12 (stageid 1-5 for pickup)
 (1, 101, 'BP2024-101', 1, '2024-06-01 00:00:00', '2025-05-31 23:59:59', 1, '2024-06-01 00:00:00', 1, '2024-06-01 00:00:00'),  -- Arjun at Green Park
 (2, 102, 'BP2024-102', 1, '2024-06-01 00:00:00', '2025-05-31 23:59:59', 1, '2024-06-01 00:00:00', 1, '2024-06-01 00:00:00'),  -- Priya at Green Park
-(3, 103, 'BP2024-103', 2, '2024-06-01 00:00:00', '2025-05-31 23:59:59', 1, '2024-06-01 00:00:00', 1, '2024-06-01 00:00:00'),  -- Rahul at Hauz Khas
+(7, 103, 'BP2024-103', 2, '2024-06-01 00:00:00', '2025-05-31 23:59:59', 1, '2024-06-01 00:00:00', 1, '2024-06-01 00:00:00'),  -- Rahul at Hauz Khas
 (4, 104, 'BP2024-104', 2, '2024-06-01 00:00:00', '2025-05-31 23:59:59', 1, '2024-06-01 00:00:00', 1, '2024-06-01 00:00:00'),  -- Sneha at Hauz Khas
 (5, 105, 'BP2024-105', 3, '2024-06-01 00:00:00', '2025-05-31 23:59:59', 1, '2024-06-01 00:00:00', 1, '2024-06-01 00:00:00'),  -- Karan at Malviya Nagar
 (6, 106, 'BP2024-106', 3, '2024-06-01 00:00:00', '2025-05-31 23:59:59', 1, '2024-06-01 00:00:00', 1, '2024-06-01 00:00:00'),  -- Ananya at Malviya Nagar
@@ -193,7 +193,7 @@ INSERT INTO `base_bus_user_routes` (`id`, `userid`, `buspassno`, `stageid`, `fro
 INSERT INTO `base_bus_trip_header` (`id`, `assetrouteattendantid`, `starttime`, `createdby`, `createdon`) VALUES
 (1, 1, '2025-12-08 06:30:00', 6, '2025-12-08 06:30:00'),  -- Today's morning trip for Route 12
 (2, 3, '2025-12-08 06:45:00', 7, '2025-12-08 06:45:00'),  -- Today's morning trip for Route 15
-(3, 1, '2025-12-07 06:30:00', 6, '2025-12-07 06:30:00'),  -- Yesterday's morning trip for Route 12
+(7, 1, '2025-12-07 06:30:00', 6, '2025-12-07 06:30:00'),  -- Yesterday's morning trip for Route 12
 (4, 2, '2025-12-07 15:00:00', 6, '2025-12-07 15:00:00');  -- Yesterday's afternoon trip for Route 12
 
 -- ============================================
@@ -204,7 +204,7 @@ INSERT INTO `base_bus_trip_attendance_details` (`id`, `headerid`, `stageid`, `us
 -- Trip 1 (Today's Route 12 morning pickup)
 (1, 1, 1, 101, 1, 6, '2025-12-08 06:32:00', 6, '2025-12-08 06:32:00'),  -- Arjun present
 (2, 1, 1, 102, 1, 6, '2025-12-08 06:33:00', 6, '2025-12-08 06:33:00'),  -- Priya present
-(3, 1, 2, 103, 3, 6, '2025-12-08 06:47:00', 6, '2025-12-08 06:47:00'),  -- Rahul reassigned
+(7, 1, 2, 103, 3, 6, '2025-12-08 06:47:00', 6, '2025-12-08 06:47:00'),  -- Rahul reassigned
 (4, 1, 2, 104, 1, 6, '2025-12-08 06:48:00', 6, '2025-12-08 06:48:00'),  -- Sneha present
 (5, 1, 3, 105, 0, 6, '2025-12-08 07:02:00', 6, '2025-12-08 07:02:00'),  -- Karan absent
 (6, 1, 3, 106, 1, 6, '2025-12-08 07:03:00', 6, '2025-12-08 07:03:00'),  -- Ananya present
@@ -224,7 +224,7 @@ INSERT INTO `base_bus_trip_studentsatstart` (`id`, `headerid`, `userid`, `status
 -- Trip 1 students at start
 (1, 1, 101, 0, 6, '2025-12-08 06:30:00', 6, '2025-12-08 06:30:00'),
 (2, 1, 102, 0, 6, '2025-12-08 06:30:00', 6, '2025-12-08 06:30:00'),
-(3, 1, 103, 0, 6, '2025-12-08 06:30:00', 6, '2025-12-08 06:30:00'),
+(7, 1, 103, 0, 6, '2025-12-08 06:30:00', 6, '2025-12-08 06:30:00'),
 (4, 1, 104, 0, 6, '2025-12-08 06:30:00', 6, '2025-12-08 06:30:00'),
 (5, 1, 105, 0, 6, '2025-12-08 06:30:00', 6, '2025-12-08 06:30:00'),
 (6, 1, 106, 0, 6, '2025-12-08 06:30:00', 6, '2025-12-08 06:30:00'),
@@ -237,7 +237,7 @@ INSERT INTO `base_bus_trip_studentsatstart` (`id`, `headerid`, `userid`, `status
 INSERT INTO `base_bus_trip_time_details` (`id`, `headerid`, `stageid`, `arrivaltime`, `departuretime`, `createdon`) VALUES
 (1, 1, 1, '2025-12-08 06:30:00', '2025-12-08 06:35:00', '2025-12-08 06:35:00'),  -- Green Park
 (2, 1, 2, '2025-12-08 06:45:00', '2025-12-08 06:50:00', '2025-12-08 06:50:00'),  -- Hauz Khas
-(3, 1, 3, '2025-12-08 07:00:00', '2025-12-08 07:05:00', '2025-12-08 07:05:00');  -- Malviya Nagar (current stop)
+(7, 1, 3, '2025-12-08 07:00:00', '2025-12-08 07:05:00', '2025-12-08 07:05:00');  -- Malviya Nagar (current stop)
 
 -- ============================================
 -- 14. GPS LOCATION DATA (base_bus_location_data)
@@ -245,7 +245,7 @@ INSERT INTO `base_bus_trip_time_details` (`id`, `headerid`, `stageid`, `arrivalt
 INSERT INTO `base_bus_location_data` (`id`, `tripid`, `assetname`, `latitude`, `longitude`, `timestamp`, `speed`, `direction`, `createdon`) VALUES
 (1, 1, 'TS09EK3274', 17.4156000, 78.4347000, '2025-12-08 06:30:00', 0.00, 0, '2025-12-08 06:30:00'),
 (2, 1, 'TS09EK3274', 17.4158000, 78.4350000, '2025-12-08 06:35:00', 25.50, 45, '2025-12-08 06:35:00'),
-(3, 1, 'TS09EK3274', 17.4165000, 78.4380000, '2025-12-08 06:40:00', 30.00, 50, '2025-12-08 06:40:00'),
+(7, 1, 'TS09EK3274', 17.4165000, 78.4380000, '2025-12-08 06:40:00', 30.00, 50, '2025-12-08 06:40:00'),
 (4, 1, 'TS09EK3274', 17.4167000, 78.4389000, '2025-12-08 06:45:00', 5.00, 48, '2025-12-08 06:45:00'),
 (5, 1, 'TS09EK3274', 17.4200000, 78.4420000, '2025-12-08 06:55:00', 28.00, 55, '2025-12-08 06:55:00'),
 (6, 1, 'TS09EK3274', 17.4234000, 78.4456000, '2025-12-08 07:00:00', 0.00, 55, '2025-12-08 07:00:00');
@@ -256,7 +256,7 @@ INSERT INTO `base_bus_location_data` (`id`, `tripid`, `assetname`, `latitude`, `
 INSERT INTO `base_bus_stagedelay_alerts` (`id`, `tripid`, `stageid`, `parentid`, `alerttype`, `senton`) VALUES
 (1, 1, 3, 205, 'delay', '2025-12-08 07:10:00'),  -- Delay alert for Malviya Nagar to Karan's parent
 (2, 3, 2, 203, 'delay', '2025-12-07 06:55:00'),  -- Yesterday delay at Hauz Khas
-(3, 1, 1, 201, 'no_boarding', '2025-12-08 06:40:00');  -- No boarding alert
+(7, 1, 1, 201, 'no_boarding', '2025-12-08 06:40:00');  -- No boarding alert
 
 -- ============================================
 -- 16. USER NOTIFICATIONS (base_useralerts)
@@ -264,7 +264,7 @@ INSERT INTO `base_bus_stagedelay_alerts` (`id`, `tripid`, `stageid`, `parentid`,
 INSERT INTO `base_useralerts` (`id`, `userid`, `schoolid`, `type`, `message`, `date`, `detailid`, `urlcode`, `status`, `pushstatus`) VALUES
 (1, 2, 1, 'approval', 'New route change request for Arjun Sharma', '2025-12-08 08:00:00', 'approval_1', 'notif_001', 0, 0),
 (2, 2, 1, 'approval', 'Half-day leave request for Priya Patel', '2025-12-08 08:30:00', 'approval_2', 'notif_002', 0, 0),
-(3, 2, 1, 'alert', 'Bus R-12 has been late 3 times this week', '2025-12-08 09:00:00', 'alert_1', 'notif_003', 0, 0),
+(7, 2, 1, 'alert', 'Bus R-12 has been late 3 times this week', '2025-12-08 09:00:00', 'alert_1', 'notif_003', 0, 0),
 (4, 6, 1, 'info', 'Morning pickup trip starts in 30 minutes', '2025-12-08 06:00:00', 'trip_1', 'notif_004', 1, 1),
 (5, 4, 1, 'success', 'Half-day request for Rahul Verma approved', '2025-12-08 10:00:00', 'approval_3', 'notif_005', 0, 0),
 (6, 201, 1, 'info', 'Your child Arjun has boarded the bus', '2025-12-08 06:33:00', 'boarding_1', 'notif_006', 1, 1),
