@@ -9,10 +9,13 @@ import {
   getBusTracking,
   getStudentsByRoute,
   getTodayTrips,
-  markAttendance, // Import the new API
+  markAttendance,
+  // Import the new API
   Stop,
   Student
 } from '../../services/api-rest';
+import { useLocalSearchParams } from 'expo-router';
+
 
 type StopWithStudents = Stop & { students: Student[] };
 type StopStatus = 'completed' | 'current' | 'pending';
@@ -24,27 +27,29 @@ export default function RouteScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [expandedStopId, setExpandedStopId] = useState<string | null>(null);
   const [hoveredStopId, setHoveredStopId] = useState<string | null>(null);
-  
+  const params = useLocalSearchParams();
+
   // LIVE TRACKING STATES
   const [currentStopIndex, setCurrentStopIndex] = useState(0);
   const [progress, setProgress] = useState(0); // 0.0 to 1.0
   const [isLive, setIsLive] = useState(false);
-
   const [studentStatuses, setStudentStatuses] = useState<Record<string, AttendanceStatus>>({});
   const [tripId, setTripId] = useState<string | null>(null);
-
   const routeId = user?.assignedRoute?.id || '1';
+  const cameFromStartPickup = params.fromStartPickup === 'true';
+const [pickupStarted, setPickupStarted] = useState(cameFromStartPickup); // start immediately if from button
+const [showEntryPopup, setShowEntryPopup] = useState(!cameFromStartPickup); // only show popup if NOT from button
 
-  const loadRouteData = async (isSilent = false) => {
+
+  const loadRouteData = async (isSilent = false): Promise<number> => {
+    let fetchedStopsCount = 0;
+    //const loadRouteData = async (isSilent = false) => {
     if (!isSilent) setIsLoading(true);
-
     try {
       // 1. Fetch Route Students
       const routeResponse = await getStudentsByRoute(routeId);
-      
       // 2. Fetch Active Trip
       const tripResponse = await getTodayTrips();
-      
       // 3. NEW: Fetch Live Bus Location & Progress
       const trackingResponse = await getBusTracking(routeId);
       //console.log(JSON.stringify(trackingResponse, null, 2));
@@ -56,6 +61,7 @@ export default function RouteScreen() {
 
       if (routeResponse.success && routeResponse.data) {
         const fetchedStops = routeResponse.data.stops;
+        fetchedStopsCount = fetchedStops.length;
         const newStatuses: Record<string, AttendanceStatus> = {};
         fetchedStops.forEach(stop => {
           stop.students.forEach(student => {
@@ -72,15 +78,16 @@ export default function RouteScreen() {
         setProgress(trackingResponse.data.progress);
         setIsLive(trackingResponse.data.isLive);
       }
-
     } catch (error) {
       console.error('Failed to load route data:', error);
       if (!isSilent) Alert.alert('Error', 'Failed to load data.');
     } finally {
       if (!isSilent) setIsLoading(false);
     }
+    return fetchedStopsCount;
   };
 
+  /*
   useFocusEffect(
     useCallback(() => {
       loadRouteData(false);
@@ -91,6 +98,27 @@ export default function RouteScreen() {
       return () => clearInterval(intervalId);
     }, [routeId])
   );
+  */
+
+ useFocusEffect(
+  useCallback(() => {
+    let mounted = true;
+
+    const init = async () => {
+      await loadRouteData(false);
+      // popup state already handled via initial state
+    };
+
+    init();
+
+    const intervalId = setInterval(() => loadRouteData(true), 15000);
+    return () => {
+      mounted = false;
+      clearInterval(intervalId);
+    };
+  }, [routeId])
+);
+
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -133,15 +161,7 @@ export default function RouteScreen() {
   const getStopMarkerStyle = (index: number) => {
     const status = getStopStatus(index);
     const isFullyMarked = isStopFullyMarked(stops[index]);
-
-    let style = { 
-      bg: 'bg-zinc-700', 
-      iconColor: '#A1A1AA', 
-      Icon: MapPin,
-      size: 'w-10 h-10',
-      iconSize: 18
-    };
-
+    let style = { bg: 'bg-zinc-700', iconColor: '#A1A1AA', Icon: MapPin, size: 'w-10 h-10', iconSize: 18 };
     if (status === 'completed') {
       style.bg = 'bg-primary';
       style.iconColor = '#FFFFFF';
@@ -150,37 +170,30 @@ export default function RouteScreen() {
       style.bg = 'bg-primary';
       style.iconColor = '#FFFFFF';
       style.size = 'w-12 h-12';
-      style.iconSize = 22;      
+      style.iconSize = 22;
     }
-    
     return style;
   };
-  
+
   // --- HELPER: RENDER VERTICAL PROGRESS BAR ---
   const renderVerticalLine = (index: number, status: StopStatus) => {
     // Logic:
     // 1. If stop is COMPLETED (past), show full solid line
     // 2. If stop is CURRENT (we are here/departing), show PARTIAL line based on progress
     // 3. If stop is PENDING (future), show grey line
-
     if (status === 'completed') {
       return <View className="w-0.5 flex-1 min-h-[40px] bg-primary" />;
     }
-
     if (status === 'current') {
       // This is the line going from CURRENT stop to NEXT stop
       // We use flex to push the coloured part down
       return (
         <View className="w-0.5 flex-1 min-h-[40px] bg-zinc-700 relative">
           {/* Animated/Calculated Fill */}
-          <View 
-            style={{ height: `${progress * 100}%` }} 
-            className="w-full bg-primary absolute top-0 left-0" 
-          />
+          <View style={{ height: `${progress * 100}%` }} className="w-full bg-primary absolute top-0 left-0" />
         </View>
       );
     }
-
     // Default Pending
     return <View className="w-0.5 flex-1 min-h-[40px] bg-zinc-700" />;
   };
@@ -195,21 +208,81 @@ export default function RouteScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
+      {/* ENTRY POPUP */}
+      {showEntryPopup && (
+  <View className="absolute inset-0 z-50 items-center justify-center">
+    {/* Background Blur / Fade */}
+    <View className="absolute inset-0 bg-black/60" />
+
+    {/* Popup Card */}
+    <View className="bg-card rounded-2xl px-6 py-8 w-[85%] items-center">
+      
+      {stops.length === 0 ? (
+        <>
+          <Text className="text-2xl mb-2">😕</Text>
+
+          <Text className="text-lg font-semibold text-foreground text-center">
+            No Route Assigned
+          </Text>
+
+          <Text className="text-muted-foreground text-center mt-2">
+            Please contact the admin to assign a route before starting pickup.
+          </Text>
+
+          <TouchableOpacity
+            className="mt-6 py-3 px-10 rounded-xl bg-zinc-700"
+            onPress={() => setShowEntryPopup(false)}
+          >
+            <Text className="text-white font-medium">OK</Text>
+          </TouchableOpacity>
+        </>
+      ) : (
+        <>
+          <Text className="text-3xl mb-2">🚌</Text>
+
+          <Text className="text-xl font-semibold text-foreground text-center">
+            Ready to Start Pickup?
+          </Text>
+
+          <Text className="text-muted-foreground text-center mt-2 leading-5">
+            Welcome! This will begin live tracking and attendance marking
+            for today’s route.
+          </Text>
+
+          <TouchableOpacity
+            className="bg-primary mt-6 py-3 px-10 rounded-xl"
+            onPress={() => {
+              setPickupStarted(true);
+              setShowEntryPopup(false);
+            }}
+          >
+            <Text className="text-primary-foreground font-semibold">
+              Start Tracking 🚀
+            </Text>
+          </TouchableOpacity>
+        </>
+      )}
+    </View>
+  </View>
+)}
+
+
       <View className="px-4 py-4">
         <View className="flex-row justify-between items-center">
-           <View>
-             <Text className="text-2xl font-semibold text-foreground">Route</Text>
-             <Text className="text-sm text-muted-foreground mt-1">
-               {stops.length} stops • {isLive ? 'Live Tracking On' : 'Waiting for GPS...'}
-             </Text>
-           </View>
-           {isLive && (
-             <View className="bg-green-500/20 px-3 py-1 rounded-full animate-pulse">
-               <Text className="text-primary text-xs font-bold">LIVE</Text>
-             </View>
-           )}
+          <View>
+            <Text className="text-2xl font-semibold text-foreground">Route</Text>
+            <Text className="text-sm text-muted-foreground mt-1">
+              {stops.length} stops • {isLive ? 'Live Tracking On' : 'Waiting for GPS...'}
+            </Text>
+          </View>
+          {isLive && (
+            <View className="bg-green-500/20 px-3 py-1 rounded-full animate-pulse">
+              <Text className="text-primary text-xs font-bold">LIVE</Text>
+            </View>
+          )}
         </View>
       </View>
+
       {/* Horizontal Progress Bar */}
       <View className="px-4 mb-4" style={{ height: '12%' }}>
         <View className="flex-1 justify-center">
@@ -220,7 +293,6 @@ export default function RouteScreen() {
               const isCompleted = status === 'completed';
               const isCurrent = status === 'current';
               const isFullyMarked = isStopFullyMarked(stop);
-              
               return (
                 <View key={stop.id} className="flex-row items-center flex-1">
                   <TouchableOpacity
@@ -239,45 +311,30 @@ export default function RouteScreen() {
                   >
                     <View
                       className={`rounded-full items-center justify-center ${
-                        isCurrent
-                          ? 'w-6 h-6 bg-primary'
-                          : isCompleted && isFullyMarked
-                          ? 'w-4 h-4 bg-primary'
-                          : 'w-3 h-3 bg-zinc-600'
+                        isCurrent ? 'w-6 h-6 bg-primary' : isCompleted && isFullyMarked ? 'w-4 h-4 bg-primary' : 'w-3 h-3 bg-zinc-600'
                       }`}
                     >
-                    {isCurrent ? ( <MapPin size={12} color="#fff" />) : isCompleted && isFullyMarked ? ( <CheckCircle size={10} color="#fff" />) : null}
+                      {isCurrent ? <MapPin size={12} color="#fff" /> : isCompleted && isFullyMarked ? <CheckCircle size={10} color="#fff" /> : null}
                     </View>
-                    
                     {hoveredStopId === stop.id && (
                       <View className="absolute -top-10 left-1/2 -translate-x-1/2 bg-card border border-border rounded-lg px-3 py-1.5 z-10 min-w-[120px]">
                         <Text className="text-xs text-foreground text-center" numberOfLines={1}>
                           {stop.name}
                         </Text>
-                        <Text className="text-[10px] text-muted-foreground text-center">
-                          {stop.scheduledPickupTime}
-                        </Text>
+                        <Text className="text-[10px] text-muted-foreground text-center">{stop.scheduledPickupTime}</Text>
                       </View>
                     )}
                   </TouchableOpacity>
-
                   {!isLast && (
                     <View className="flex-1 flex-row items-center mx-1">
-                      <View
-                        className={`flex-1 ${
-                          isCompleted ? 'h-1 bg-primary' : 'h-0.5 bg-zinc-600'
-                        }`}
-                      />
-                      {index === currentStopIndex - 1 && (
-                        <ArrowRight size={12} color="#22C55E" className="mx-0.5" />
-                      )}
+                      <View className={`flex-1 ${isCompleted ? 'h-1 bg-primary' : 'h-0.5 bg-zinc-600'}`} />
+                      {index === currentStopIndex - 1 && <ArrowRight size={12} color="#22C55E" className="mx-0.5" />}
                     </View>
                   )}
                 </View>
               );
             })}
           </View>
-          
           <View className="flex-row justify-between mt-2">
             <Text className="text-[10px] text-muted-foreground">Trip Start</Text>
             <Text className="text-[10px] text-muted-foreground">School</Text>
@@ -285,11 +342,9 @@ export default function RouteScreen() {
         </View>
       </View>
 
-      <ScrollView 
+      <ScrollView
         className="flex-1 px-4"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#22C55E']} tintColor="#22C55E" />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#22C55E']} tintColor="#22C55E" />}
       >
         {stops.map((stop, index) => {
           const status = getStopStatus(index);
@@ -314,9 +369,7 @@ export default function RouteScreen() {
                 <TouchableOpacity
                   onPress={() => stop.students.length > 0 && toggleExpand(stop.id)}
                   activeOpacity={0.8}
-                  className={`bg-card rounded-xl overflow-hidden ${
-                    status === 'current' ? 'border-2 border-primary' : 'border border-border'
-                  }`}
+                  className={`bg-card rounded-xl overflow-hidden ${status === 'current' ? 'border-2 border-primary' : 'border border-border'}`}
                 >
                   <View className="p-4">
                     <View className="flex-row items-center justify-between">
@@ -326,7 +379,6 @@ export default function RouteScreen() {
                           {stop.scheduledPickupTime} • {stop.students.length} students
                         </Text>
                       </View>
-                      
                       {stop.students.length > 0 && (
                         <View className="flex-row items-center">
                           {isExpanded ? <ChevronUp size={20} color="#71717A" /> : <ChevronDown size={20} color="#71717A" />}
@@ -340,21 +392,21 @@ export default function RouteScreen() {
                     <View className="border-t border-border">
                       {stop.students.map((student, i) => (
                         <View key={student.id} className={`p-4 ${i < stop.students.length - 1 ? 'border-b border-border' : ''}`}>
-                             <View className="flex-row items-center justify-between">
-                                <View>
-                                    <Text className="text-foreground font-medium">{student.name}</Text>
-                                    <Text className="text-muted-foreground text-xs">{student.class}</Text>
-                                </View>
-                                {/* Attendance Buttons */}
-                                <View className="flex-row gap-2">
-                                  <TouchableOpacity onPress={() => handleMarkAttendance(student.id, 'present')}>
-                                      <CheckCircle size={28} color={studentStatuses[student.id] === 'present' ? "#22C55E" : "#52525B"} />
-                                  </TouchableOpacity>
-                                  <TouchableOpacity onPress={() => handleMarkAttendance(student.id, 'absent')}>
-                                      <XCircle size={28} color={studentStatuses[student.id] === 'absent' ? "#EF4444" : "#52525B"} />
-                                  </TouchableOpacity>
-                                </View>
-                             </View>
+                          <View className="flex-row items-center justify-between">
+                            <View>
+                              <Text className="text-foreground font-medium">{student.name}</Text>
+                              <Text className="text-muted-foreground text-xs">{student.class}</Text>
+                            </View>
+                            {/* Attendance Buttons */}
+                            <View className="flex-row gap-2">
+                              <TouchableOpacity onPress={() => handleMarkAttendance(student.id, 'present')}>
+                                <CheckCircle size={28} color={studentStatuses[student.id] === 'present' ? '#22C55E' : '#52525B'} />
+                              </TouchableOpacity>
+                              <TouchableOpacity onPress={() => handleMarkAttendance(student.id, 'absent')}>
+                                <XCircle size={28} color={studentStatuses[student.id] === 'absent' ? '#EF4444' : '#52525B'} />
+                              </TouchableOpacity>
+                            </View>
+                          </View>
                         </View>
                       ))}
                     </View>
