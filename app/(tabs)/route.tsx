@@ -226,7 +226,7 @@ const [showEntryPopup, setShowEntryPopup] = useState(!cameFromStartPickup); // o
           </Text>
 
           <Text className="text-muted-foreground text-center mt-2">
-            Please contact the admin to assign a route before starting pickup.
+            Please inform the admin to assign a route before starting pickup.
           </Text>
 
           <TouchableOpacity
