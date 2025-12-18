@@ -70,17 +70,6 @@ export default function TabsLayout() {
         }}
       />
 
-      <Tabs.Screen
-        name="report"
-        options={{
-          title: 'Report',
-          href: isAttender ? '/report' : null,
-          tabBarIcon: ({ color, size }) => (
-            <AlertCircle color={color} size={size - 2} />
-          ),
-        }}
-      />
-
       {/* Shared */}
       <Tabs.Screen
         name="students"
@@ -89,6 +78,17 @@ export default function TabsLayout() {
           href: isAttender || isOfficeAdmin ? '/students' : null,
           tabBarIcon: ({ color, size }) => (
             <Users color={color} size={size - 2} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="report"
+        options={{
+          title: 'Report',
+          href: isAttender ? '/report' : null,
+          tabBarIcon: ({ color, size }) => (
+            <AlertCircle color={color} size={size - 2} />
           ),
         }}
       />
@@ -131,7 +131,7 @@ export default function TabsLayout() {
         name="reports"
         options={{
           title: 'Reports',
-          href: isTM ? '/reports' : null,
+          href: isTM || isAttender ? '/reports' : null,
           tabBarIcon: ({ color, size }) => (
             <FileText color={color} size={size - 2} />
           ),

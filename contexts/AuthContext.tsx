@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { AppRole, UserProfile } from '../services/api-rest';
 import {
@@ -11,6 +12,7 @@ import {
   saveUserData,
   StoredUserData,
 } from '../services/storage';
+
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -91,7 +93,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const switchRole = async () => {
     await removeSelectedRole();
-    setSelectedRole(null);
+    router.replace('/(auth)/role-select');
+    return;
   };
 
   return (
