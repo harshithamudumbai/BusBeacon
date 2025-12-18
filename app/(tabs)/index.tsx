@@ -11,7 +11,7 @@ import { clearShowWelcome, shouldShowWelcome } from '../../services/storage';
 
 // Attender Home Screen
 function AttenderHome() {
-  const { user,selectedRole } = useAuth();
+  const { user,selectedRole, switchRole,hasMultipleRoles } = useAuth();
   const [showWelcome, setShowWelcome] = useState(false);
   const [tripsData, setTripsData] = useState<TodayTrips | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -89,9 +89,16 @@ function AttenderHome() {
             <Text className="text-lg font-semibold text-foreground">Hello, {user?.name || 'User'}  </Text>
             {selectedRole && (<Text className="text-sm text-muted-foreground"> {ROLE_LABELS[selectedRole]}</Text>)}
           </View>
-          <TouchableOpacity onPress={() => router.push('/notifications')} className="w-10 h-10 bg-secondary rounded-full items-center justify-center">
-            <Bell size={20} color="#FAFAFA" />
-          </TouchableOpacity>
+          <View className="flex-row">
+            {hasMultipleRoles && (
+              <TouchableOpacity onPress={switchRole} className="w-10 h-10 bg-blue-600/20 rounded-full items-center justify-center mr-2">
+                <RefreshCw size={18} color="#3B82F6" />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity onPress={() => router.push('/notifications')} className="w-10 h-10 bg-secondary rounded-full items-center justify-center">
+              <Bell size={20} color="#FAFAFA" />
+            </TouchableOpacity>
+          </View>
         </View>
         {/*
         <TouchableOpacity onPress={() => router.push('/profile')} className="bg-card rounded-2xl p-4 mb-6">

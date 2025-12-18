@@ -9,7 +9,7 @@ import {
   XCircle
 } from 'lucide-react-native';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -19,13 +19,12 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  
 } from 'react-native';
 
+import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
 import { getStudents, Student } from '../../services/api-rest';
-import { useFocusEffect } from '@react-navigation/native';
 
 
 export default function StudentsScreen() {
@@ -148,11 +147,12 @@ export default function StudentsScreen() {
         {filteredStudents.map((student) => (
           <View key={student.id} className="bg-card rounded-xl p-4 mb-3">
             <View className="flex-row items-center">
-              <Image
-                source={{ uri: student.photoUrl || 'https://via.placeholder.com/100' }}
-                className="w-12 h-12 rounded-full bg-secondary"
-              />
-
+              <View className="w-20 h-20 shrink-0">
+                <Image
+                  source={{ uri: student.photoUrl || 'http://testiutripura.winnou.in/templates/rhuk_milkyway/images/user.png?w=100&h=100' }}
+                  className="w-17 h-16  bg-secondary"
+                />
+              </View>
               <View className="flex-1 ml-3">
                 <Text className="text-base font-semibold text-foreground">
                   {student.name}

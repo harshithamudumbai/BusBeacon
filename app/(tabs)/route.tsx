@@ -1,7 +1,7 @@
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { ArrowRight, CheckCircle, ChevronDown, ChevronUp, MapPin, XCircle } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -14,7 +14,6 @@ import {
   Stop,
   Student
 } from '../../services/api-rest';
-import { useLocalSearchParams } from 'expo-router';
 
 
 type StopWithStudents = Stop & { students: Student[] };
@@ -111,7 +110,7 @@ const [showEntryPopup, setShowEntryPopup] = useState(!cameFromStartPickup); // o
 
     init();
 
-    const intervalId = setInterval(() => loadRouteData(true), 15000);
+    const intervalId = setInterval(() => loadRouteData(true), 5000);
     return () => {
       mounted = false;
       clearInterval(intervalId);
@@ -314,7 +313,7 @@ const [showEntryPopup, setShowEntryPopup] = useState(!cameFromStartPickup); // o
                         isCurrent ? 'w-6 h-6 bg-primary' : isCompleted && isFullyMarked ? 'w-4 h-4 bg-primary' : 'w-3 h-3 bg-zinc-600'
                       }`}
                     >
-                      {isCurrent ? <MapPin size={12} color="#fff" /> : isCompleted && isFullyMarked ? <CheckCircle size={10} color="#fff" /> : null}
+                    {isCurrent ? <MapPin size={12} color="#fff" /> : isCompleted && isFullyMarked ? <CheckCircle size={10} color="#fff" /> : (isCompleted ? <View className='rounded-full items-center justify-center w-4 h-4 bg-primary'></View> : null)}
                     </View>
                     {hoveredStopId === stop.id && (
                       <View className="absolute -top-10 left-1/2 -translate-x-1/2 bg-card border border-border rounded-lg px-3 py-1.5 z-10 min-w-[120px]">
@@ -393,9 +392,19 @@ const [showEntryPopup, setShowEntryPopup] = useState(!cameFromStartPickup); // o
                       {stop.students.map((student, i) => (
                         <View key={student.id} className={`p-4 ${i < stop.students.length - 1 ? 'border-b border-border' : ''}`}>
                           <View className="flex-row items-center justify-between">
-                            <View>
-                              <Text className="text-foreground font-medium">{student.name}</Text>
-                              <Text className="text-muted-foreground text-xs">{student.class}</Text>
+                            <View className="w-20 h-20 shrink-0">
+                            <Image
+                              source={{ uri: student.photoUrl || 'http://testiutripura.winnou.in/templates/rhuk_milkyway/images/user.png?w=100&h=100' }}
+                              className="w-17 h-16  bg-secondary "
+                            />       
+                            </View>                     
+                            <View className="flex-1 ml-3">
+                              <Text className="text-sm font-medium text-foreground">
+                                {student.name}
+                              </Text>
+                              <Text className="text-xs text-muted-foreground">
+                               {student.class}-{student.section}
+                              </Text>
                             </View>
                             {/* Attendance Buttons */}
                             <View className="flex-row gap-2">
